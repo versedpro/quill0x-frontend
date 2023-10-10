@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Table,
@@ -8,6 +8,7 @@ import {
   TableHead,
   TableRow,
   Typography,
+  Pagination
 } from "@mui/material";
 
 const TokenBalance = ({ balance, tokenIconUrl }) => {
@@ -32,8 +33,17 @@ const TokenBalance = ({ balance, tokenIconUrl }) => {
 };
 
 const SignerTable = ({ tableItems }) => {
+
+  const [page, setPage] = useState(1);
+
   return (
-    <Box>
+    <Box
+      sx={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '10px'
+      }}
+    >
       <TableContainer
         sx={{
           display: { md: "flex", xs: "none" },
@@ -60,6 +70,7 @@ const SignerTable = ({ tableItems }) => {
           <TableBody>
             {tableItems?.length > 0 &&
               tableItems.map((item, index) => (
+                index >= (page - 1) * 20 && index < page * 20 &&
                 <TableRow
                   key={index}
                   sx={{
@@ -99,11 +110,12 @@ const SignerTable = ({ tableItems }) => {
         sx={{
           display: { md: "none", xs: "flex" },
           flexDirection: "column",
-          maxWidth: "540px",
+          // maxWidth: "540px",
         }}
       >
         {tableItems?.length > 0 &&
           tableItems.map((item, index) => (
+            index >= (page - 1) * 20 && index < page * 20 &&
             <Box
               key={index}
               sx={{
@@ -126,7 +138,7 @@ const SignerTable = ({ tableItems }) => {
               >
                 <Typography
                   sx={{
-                    fontSize: { sm: "18px", xs: "16px" },
+                    fontSize: { md: "18px", xs: "16px" },
                     color: "#00000",
                     fontWeight: "500",
                   }}
@@ -168,6 +180,19 @@ const SignerTable = ({ tableItems }) => {
               </Box>
             </Box>
           ))}
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'end'
+        }}
+      >
+        <Pagination onChange={(e, v) => {console.log(v); setPage(v)}} varaiant="outlined" color="secondary" page={page} siblingCount={2} boundaryCount={1} count={Math.ceil(tableItems.length / 20)}
+          sx={{
+            button: { color: "white" }
+          }}
+        />
       </Box>
     </Box>
   );
