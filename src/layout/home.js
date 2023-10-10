@@ -22,53 +22,92 @@ const Home = () => {
                     },
                 }}
             >
-                <video src={BannerVideo} loop autoPlay />
+                <video src={BannerVideo} loop autoPlay controls />
                 <Box
+                    gap={'50px'}
                     sx={{
                         marginTop: "16px",
+                        display: 'flex',
+                        flexDirection: { md: 'row', xs: 'column' },
+                        alignItems: { md: 'center', xs: 'start' },
                     }}
                 >
-                    <Typography
-                        sx={{
-                            fontSize: { md: "28px", sm: "24px", xs: "20px" },
-                            color: "#FFFFFF",
-                            fontStyle: "italic",
-                        }}
-                    >
-                        A Call to Crypto Action:
-                    </Typography>
-                    <Box
-                        sx={{
-                            ".MuiTypography-root": {
-                                fontSize: { md: "54px", sm: "48px", xs: "36px" },
-                                color: "#D32F28",
-                                fontWeight: "700",
-                                lineHeight: { md: "58px", sm: "52px", xs: "40px" },
-                            },
-                        }}
-                    >
-                        <Typography>DECENTRALIZATION</Typography>
-                        <Typography>AGAINST</Typography>
-                        <Box
+                    <Box gap={'15px'} sx={{
+                        display: { md: 'none', xs: 'flex' },
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        '.MuiBox-root': {
+                            width: '120px',
+                            aspectRatio: '1',
+                            borderRadius: '10000px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }
+                    }}>
+                        <Box sx={{
+                            background: '#FF8000'
+                        }}>
+                            <Typography>100</Typography>
+                            <Typography>Signers</Typography>
+                        </Box>
+                        <Box sx={{
+                            background: '#D32F28'
+                        }}>
+                            <Typography>100</Typography>
+                            <Typography>USDEBT</Typography>
+                        </Box>
+                    </Box>
+                    <Box>
+                        <Typography
                             sx={{
-                                display: "flex",
-                                flexDirection: "row",
-                                alignItems: "center",
+                                fontSize: { md: "28px", sm: "24px", xs: "20px" },
+                                color: "#FFFFFF",
+                                fontStyle: "italic",
                             }}
                         >
-                            <Typography>RISING</Typography>
-                            <Typography
-                                sx={{
-                                    marginLeft: "10px",
-                                    paddingLeft: "10px",
-                                    paddingRight: "10px",
-                                    background: "#213967",
-                                    color: "#000000 !important",
-                                    fontWeight: "900 !important",
-                                }}
-                            >
-                                U.S.DEBT
-                            </Typography>
+                            A Call to Crypto Action:
+                        </Typography>
+                        <Box
+                            sx={{
+                                ".MuiTypography-root": {
+                                    fontSize: { md: "54px", sm: "48px", xs: "36px" },
+                                    color: "#D32F28",
+                                    fontWeight: "700",
+                                    lineHeight: { md: "58px", sm: "52px", xs: "40px" },
+                                },
+                            }}
+                        >
+                            <Typography>DECENTRALIZATION</Typography>
+                            <Typography>AGAINST RISING  U.S.DEBT</Typography>
+                        </Box>
+                    </Box>
+                    <Box gap={'15px'} sx={{
+                        display: { md: 'flex', xs: 'none' },
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        '.MuiBox-root': {
+                            width: '120px',
+                            aspectRatio: '1',
+                            borderRadius: '10000px',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                        }
+                    }}>
+                        <Box sx={{
+                            background: '#FF8000'
+                        }}>
+                            <Typography>100</Typography>
+                            <Typography>Signers</Typography>
+                        </Box>
+                        <Box sx={{
+                            background: '#D32F28'
+                        }}>
+                            <Typography>100</Typography>
+                            <Typography>USDEBT</Typography>
                         </Box>
                     </Box>
                 </Box>
@@ -81,22 +120,22 @@ const Home = () => {
                     }}
                 >
                     <i>
-                    John F. Kennedy's 1961 call to action "Ask not what your country can
-                    do for you, ask what you can do for your country" resonates today
-                    with the soaring global national debt and economic uncertainty. The
-                    centralized U.S. government has failed to curb this escalating
-                    economic crisis by letting short term political goals lead to the
-                    devaluation of the U.S. dollar and skyrocketing inflation.
-                    Fortunately, new technology enables a shift in perspective that can
-                    help solve the seemingly impossible to solve problem. 33.1 trillion
-                    dollars, accelerating to an unsustainable pace of 15.5% annual rate.
-                    USDEBT token, minted with a fixed supply, is the first economic and
-                    social awareness token that shines a bright spotlight on the
-                    unchecked rise of the national debt. This paves the path to a
-                    solution based on cryptocurrencies. This isn't about capitalizing on
-                    market volatility. It's about empowering people to embrace a
-                    transformative economic force - decentralization - to help solve the
-                    debt crisis.</i>
+                        John F. Kennedy's 1961 call to action "Ask not what your country can
+                        do for you, ask what you can do for your country" resonates today
+                        with the soaring global national debt and economic uncertainty. The
+                        centralized U.S. government has failed to curb this escalating
+                        economic crisis by letting short term political goals lead to the
+                        devaluation of the U.S. dollar and skyrocketing inflation.
+                        Fortunately, new technology enables a shift in perspective that can
+                        help solve the seemingly impossible to solve problem. 33.1 trillion
+                        dollars, accelerating to an unsustainable pace of 15.5% annual rate.
+                        USDEBT token, minted with a fixed supply, is the first economic and
+                        social awareness token that shines a bright spotlight on the
+                        unchecked rise of the national debt. This paves the path to a
+                        solution based on cryptocurrencies. This isn't about capitalizing on
+                        market volatility. It's about empowering people to embrace a
+                        transformative economic force - decentralization - to help solve the
+                        debt crisis.</i>
                 </Typography>
             </Box>
             <Box
@@ -154,7 +193,7 @@ const Home = () => {
                     ]}
                 />
             </Box>
-        </Container>
+        </Container >
     );
 };
 export default Home;

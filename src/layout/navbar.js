@@ -21,19 +21,21 @@ function ConnectWalletButton() {
     <Button
       sx={{
         background: "#D32F28",
-        color: "#000000",
-        fontSize: "14px",
+        color: "#FFFFFF",
+        fontSize: "22px",
         textTransform: "none",
+        border: "2px solid white",
+        borderRadius: "8%", 
         ":hover": { background: "#D32F28" },
       }}
       onClick={handleClick}
     >
-
+      <b>
       {status !== 'connected'
         ? "Connect Wallet"
         : account?.substring(0, 4) + "..." + account?.substring(account.length - 4)
       }
-
+      </b>
     </Button>
   );
 }
@@ -84,22 +86,62 @@ function SignPetitionButton() {
   }
 
   return (
+    
     <Button
       sx={{
         background: "transparent",
-        color: "#D32F28",
-        fontSize: "16px",
+        color: "#FFFFFF",
+        fontSize: "22px",
         fontWeight: '500',
         textTransform: "none",
         ":hover": { background: "transparent" },
       }}
       onClick={handleClick}
     >
-      {isSigned ? "You are Signer of this petition" : "Sign"}
+      <b>{isSigned ? "You are Signer of this petition" : "Sign Petition"}</b> 
+    </Button>
+
+    
+  );
+}
+function AirdropButton() {
+  
+  return (
+    
+    <Button
+      sx={{
+        background: "transparent",
+        color: "#FFFFFF",
+        fontSize: "22px",
+        fontWeight: '500',
+        textTransform: "none",
+        ":hover": { background: "transparent" },
+      }}
+      
+    >
+      <b>Airdrop</b> 
     </Button>
   );
 }
-
+function AboutButton() {
+  
+  return (
+    
+    <Button
+      sx={{
+        background: "transparent",
+        color: "#FFFFFF",
+        fontSize: "22px",
+        fontWeight: '500',
+        textTransform: "none",
+        ":hover": { background: "transparent" },
+      }}
+      
+    >
+      <b>About</b> 
+    </Button>
+  );
+}
 const Navbar = () => {
   return (
     <Box
@@ -108,6 +150,7 @@ const Navbar = () => {
         width: "100vw",
         height: "80px",
         zIndex: "100",
+        border: "2px solid #9c06f7",
         backdropFilter: "blur(5px)",
       }}
     >
@@ -122,7 +165,7 @@ const Navbar = () => {
       >
         <Typography
           sx={{
-            fontFamily: "RockUsdebtFont",
+            fontFamily: "UsdebtFont",
             fontSize: "48px",
             paddingLeft: "10px",
             paddingRight: "10px",
@@ -130,7 +173,9 @@ const Navbar = () => {
             fontWeight: "900",
           }}
         >
-          USDEBT
+           <span style={{ textShadow: "2px 0px 1px rgba(150, 150, 150, 0.9)" }}>
+          <b>USDEBT</b>
+        </span>
         </Typography>
         <Box
           gap={"10px"}
@@ -141,6 +186,8 @@ const Navbar = () => {
           }}
         >
           <SignPetitionButton />
+          <AirdropButton />
+          <AboutButton />
           <ConnectWalletButton />
         </Box>
       </Container>
