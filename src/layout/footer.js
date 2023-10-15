@@ -1,283 +1,95 @@
 import React, { useState, useEffect } from "react";
-import { Box, Button, Container, Typography, Divider } from "@mui/material";
-import { Menu, Close } from "@mui/icons-material";
-import { useMetaMask } from "metamask-react";
-import { petition_abi } from "../petition_abi"
-import Web3, { utils } from 'web3';
-const web3 = new Web3(window.ethereum);
-const petitionAddress = '0xe44c1915C6E537745A6a0Dd23AdDFA62649e59d0';
+import { Box, Typography, Container, Link } from "@mui/material";
 
-function ConnectWalletButton({ showMobileMenu }) {
-  const { status, account, connect, ethereum } = useMetaMask();
+import DarkDocs from "../assets/images/social/dark-docs.svg";
+import DarkGithub from "../assets/images/social/dark-github.svg";
+import DarkTwitter from "../assets/images/social/dark-twitter.svg";
+import LightDocs from "../assets/images/social/light-docs.svg";
+import LightGithub from "../assets/images/social/light-github.svg";
+import LightTwitter from "../assets/images/social/light-twitter.svg";
 
-  const handleClick = () => {
-    console.log("Wallet connection clicked");
-    if (status !== 'connected') {
-      connect();
-      console.log("Wallet connected");
-    }
-  };
-
-  return (
-    <Button
-      sx={{
-        width: `${showMobileMenu ? "100%" : "auto"}`,
-        background: "#ba0d0d",
-        color: "#FFFFFF",
-        fontSize: "22px",
-        textTransform: "none",
-        border: "2px solid white",
-        borderRadius: `${showMobileMenu ? "10px" : "8%"}`,
-        ":hover": { background: "#D32F28" },
-        display: { xs: `${showMobileMenu ? 'block' : 'none'}`, md: 'block' }
-      }}
-      onClick={handleClick}
-    >
-      <b>
-        {status !== 'connected'
-          ? "Connect Wallet"
-          : account?.substring(0, 4) + "..." + account?.substring(account.length - 4)
-        }
-      </b>
-    </Button>
-  );
-}
-
-
-function SignPetitionButton({showMobileMenu}) {
-  const { account } = useMetaMask();
-  // if(account == null) return;
-  const contract = new web3.eth.Contract(petition_abi, petitionAddress);
-  const [isSigned, setIsSigned] = useState(null);
-
-  useEffect(() => {
-    if (account != null) {
-      contract.methods.isSigned(account).call()
-        .then(result => {
-          setIsSigned(result);
-        })
-        .catch(error => {
-          console.error('Error occurred:', error);
-          // Handle error
-        });
-    }
-  }, [account]);
-
-
-  const handleClick = async () => {
-    const data = contract.methods.signPetition().encodeABI();
-    const transactionObject = {
-      from: account, // Replace with your actual sender address
-      to: petitionAddress,
-      value: 0,
-      data: data,
-    };
-    try {
-      await contract.methods.signPetition().send(transactionObject)
-        .on('transactionHash', hash => {
-          console.log('Transaction hash:', hash);
-          // Handle transaction hash
-        })
-        .on('receipt', receipt => {
-          console.log('Transaction receipt:', receipt);
-          // Handle success
-        })
-    } catch (error) {
-      console.error("Error signing the petition:", error);
-    }
-
-  }
-
-  return (
-
-    <Button
-      sx={{
-        background: "transparent",
-        color: "#FFFFFF",
-        fontSize: "22px",
-        fontWeight: '500',
-        textTransform: "none",
-        ":hover": { background: "transparent" },
-        display: { xs: `${showMobileMenu ? 'block' : 'none'}`, md: 'block' }
-      }}
-      onClick={handleClick}
-    >
-      <b>{isSigned ? "You are Signer of this petition" : "Sign Petition"}</b>
-    </Button>
-  );
-}
-
-function AirdropButton({showMobileMenu}) {
+const Footer = () => {
 
   return (
     <Box
       sx={{
+        width: "100%",
         display: "flex",
         flexDirection: "row",
-        alignItems: "center"
-      }}
-    >
-      {!showMobileMenu ?
-        <Box
-          sx={{
-            height: "20px",
-            width: "4px",
-            borderRadius: "5px",
-            border: "1px solid #8f8f8f",
-            backgroundColor: "#ff00f6",
-            display: { xs: 'block', md: 'none' }
-          }}
-        >
-        </Box> :
-        <></>
-      }
-      <Button
-        sx={{
-          background: "transparent",
-          color: "#FFFFFF",
-          fontSize: { xs: `${showMobileMenu ? "22px" : "18px"}`, md: "22px" },
-          fontWeight: '500',
-          textTransform: "none",
-          ":hover": { background: "transparent" },
-        }}
-      >
-        <b>Airdrop</b>
-      </Button>
-    </Box>
-  );
-}
-
-function AboutButton({ showMobileMenu }) {
-
-  return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "center"
-      }}
-    >
-      {!showMobileMenu ?
-        <Box
-          sx={{
-            height: "20px",
-            width: "4px",
-            borderRadius: "5px",
-            border: "1px solid #8f8f8f",
-            backgroundColor: "#ff00f6",
-            display: { xs: 'block', md: 'none' }
-          }}
-        >
-        </Box> :
-        <></>
-      }
-      <Button
-        sx={{
-          background: "transparent",
-          color: "#FFFFFF",
-          fontSize: { xs: `${showMobileMenu ? "22px" : "18px"}`, md: "22px" },
-          fontWeight: '500',
-          textTransform: "none",
-          ":hover": { background: "transparent" },
-        }}
-      >
-        <b>About</b>
-      </Button>
-    </Box>
-  );
-}
-
-const Navbar = () => {
-
-  const [showMobileMenu, setShowMobileMenu] = useState(false);
-
-  return (
-    <Box
-      sx={{
-        position: "fixed",
-        width: "100vw",
-        height: `${showMobileMenu ? "100vh" : "80px"}`,
-        display: "flex",
-        flexDirection: "column",
         zIndex: "100",
-        // border: "2px solid #9c06f7",
-        backdropFilter: "blur(5px)",
+        '.MuiButton-root': {
+          fontFamily: "MontserratFont"
+        },
+        padding: {md: "0 100px", xs: "0 30px"}
       }}
     >
       <Container
         sx={{
-          height: "80px",
-          display: "flex",
-          flexDirection: "row",
-          alignItems: "center",
-          justifyContent: "space-between",
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          maxWidth: "1600px!important",
+          backgroundColor: "#111111",
+          padding: {md: "20px 15px", xs: "20px 5px"}
         }}
       >
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px'
+        }}
+      >
+        <Link href="https://docs.google.com/document/d/1udylmArA-t6FbzuwR369Pa9x0SrY452NrlRBEmhDUsk/edit?usp=sharing" underline='none'><Typography
+          sx={{
+              fontSize: { md: "14px", xs: "12px" },
+              color: "#FFFFFF",
+          }}
+        >
+          Privacy Policy
+        </Typography></Link>
+        <Link href="https://docs.google.com/document/d/1h1WhJfxQOtEo0e5FtL6C1pYrqtrPnryM58F0o2HVf5M/edit?usp=sharing" underline='none'><Typography
+          sx={{
+              fontSize: { md: "14px", xs: "12px" },
+              color: "#FFFFFF",
+          }}
+        >
+          Terms of Service
+        </Typography></Link>
+        <Link href="mailto:info@cryptopetiions.org" underline='none'><Typography
+          sx={{
+              fontSize: { md: "14px", xs: "12px" },
+              color: "#FFFFFF",
+          }}
+        >
+          Contact Email
+        </Typography></Link>
         <Typography
           sx={{
-            fontFamily: "UsdebtFont",
-            fontSize: { xs: "40px", md: "48px" },
-            paddingLeft: "10px",
-            paddingRight: "10px",
-            color: "#D32F28",
-            fontWeight: "900",
+             fontSize: "12px",
+              color: "#FFFFFF",
           }}
         >
-          <span style={{ textShadow: "2px 0px 1px rgba(150, 150, 150, 0.9)" }}>
-            <b>USDEBT</b>
-          </span>
+          CryptoPetitions.org @ Copyright All Rights Reserved 2023
         </Typography>
-        <Box
-          sx={{
-            gap: { xs: "0px", md: "10px" },
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          {!showMobileMenu ?
-            <>
-              <SignPetitionButton showMobileMenu={showMobileMenu} />
-              <Menu
-                sx={{
-                  color: "#8f8f8f",
-                  fontSize: "30px",
-                  display: { xs: 'block', md: 'none' }
-                }}
-                onClick={(e) => { setShowMobileMenu(true) }}
-              />
-              <AirdropButton showMobileMenu={showMobileMenu} />
-              <AboutButton showMobileMenu={showMobileMenu} />
-              <ConnectWalletButton showMobileMenu={showMobileMenu} />
-            </> :
-            <Close
-              sx={{
-                color: "#8f8f8f",
-                fontSize: "30px"
-              }}
-              onClick={(e) => { setShowMobileMenu(false) }}
-            />
-          }
-        </Box>
-      </Container>
-      {showMobileMenu ?
-        <Container
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            gap: "15px"
-          }}
-        >
-          <SignPetitionButton showMobileMenu={showMobileMenu} />
-          <AirdropButton showMobileMenu={showMobileMenu} />
-          <AboutButton showMobileMenu={showMobileMenu} />
-          <ConnectWalletButton showMobileMenu={showMobileMenu} />
-        </Container> :
-        <></>
-      }
+      </Box>
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'row',
+          gap: '20px'
+        }}
+      >
+      <a href="https://github.com/USDEBT51923">
+        <img width={30} height={30} src={DarkGithub} alt="github_link" />
+      </a>
+      <a href="https://x.com/USDebtCoin">
+        <img width={30} height={30} src={DarkTwitter} alt="twitter_link" />
+      </a>
+      </Box>
+      </Container>      
     </Box>
   );
 };
 
-export default Navbar;
+export default Footer;

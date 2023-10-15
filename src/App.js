@@ -1,10 +1,12 @@
 
 import Navbar from "./layout/navbar";
 import Home from "./layout/home";
+import Footer from "./layout/footer";
 
 import { MetaMaskProvider } from "metamask-react";
 
 import { createTheme, ThemeProvider } from "@mui/material";
+
 
 export const themeOptions = {
   breakpoints: {
@@ -25,6 +27,7 @@ function App() {
         <ThemeProvider theme={createTheme(themeOptions)}>
           <Navbar />
           <Home />
+          <Footer />
         </ThemeProvider>
       </MetaMaskProvider>
     </>

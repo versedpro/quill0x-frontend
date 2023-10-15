@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Table,
@@ -19,7 +19,7 @@ const TokenBalance = ({ balance, tokenIconUrl }) => {
         display: "flex",
         flexDirection: "row",
         alignItems: "center",
-        justifyContent: "center",
+        justifyContent: "end",
         img: {
           width: "32px",
           height: "32px",
@@ -32,9 +32,12 @@ const TokenBalance = ({ balance, tokenIconUrl }) => {
   );
 };
 
-const SignerTable = ({ tableItems }) => {
+const SignerTable = ({ tableItems, isUsdebtSigners }) => {
 
   const [page, setPage] = useState(1);
+
+  useEffect(() => {
+  }, [])
 
   return (
     <Box
@@ -62,9 +65,15 @@ const SignerTable = ({ tableItems }) => {
                 },
               }}
             >
-              <TableCell align="left">SIGNERS</TableCell>
-              <TableCell align="center">USDEBT</TableCell>
-              <TableCell align="center">ETH</TableCell>
+              {isUsdebtSigners ?
+                <>
+                  <TableCell align="left">USDEBT Signers</TableCell>
+                  <TableCell align="right">USDEBT Held</TableCell>
+                </> :
+                <>
+                  <TableCell align="left">ETH Signers</TableCell>
+                </>
+              }
             </TableRow>
           </TableHead>
           <TableBody>
@@ -86,20 +95,15 @@ const SignerTable = ({ tableItems }) => {
                   }}
                 >
                   <TableCell align="left">{item.signerAddress}</TableCell>
-                  <TableCell align="center">
-                    <TokenBalance
-                      balance={item.usdebtBalance}
-                      tokenIconUrl={"./logo192.png"}
-                    />
-                  </TableCell>
-                  <TableCell align="center">
-                    <TokenBalance
-                      balance={item.ethBalance}
-                      tokenIconUrl={
-                        "https://cryptologos.cc/logos/ethereum-eth-logo.svg"
-                      }
-                    />
-                  </TableCell>
+                  {isUsdebtSigners ?
+                    <TableCell align="right">
+                      <TokenBalance
+                        balance={item.usdebtBalance}
+                        tokenIconUrl={"./logo192.png"}
+                      />
+                    </TableCell> :
+                    <></>
+                  }
                 </TableRow>
               ))}
           </TableBody>
@@ -115,7 +119,7 @@ const SignerTable = ({ tableItems }) => {
       >
         {tableItems?.length > 0 &&
           tableItems.map((item, index) => (
-            index >= (page - 1) * 20 && index < page * 20 &&
+            index >= (page - 1) * 10 && index < page * 10 &&
             <Box
               key={index}
               sx={{
@@ -188,9 +192,21 @@ const SignerTable = ({ tableItems }) => {
           justifyContent: 'end'
         }}
       >
-        <Pagination onChange={(e, v) => {console.log(v); setPage(v)}} varaiant="outlined" color="secondary" page={page} siblingCount={2} boundaryCount={1} count={Math.ceil(tableItems.length / 20)}
+        <Pagination onChange={(e, v) => { console.log(v); setPage(v) }} varaiant="outlined" page={page} siblingCount={2} boundaryCount={1} count={Math.ceil(tableItems.length / 20)}
           sx={{
-            button: { color: "white" }
+            display: { md: 'block', xs: 'none' },
+            ul: {
+              '& .MuiPaginationItem-root': {
+                color: "white", "&.Mui-selected": { backgroundColor: "#D32F28" },
+                ":hover": { backgroundColor: "#D32F28" }
+              }
+            }
+          }}
+        />
+        <Pagination onChange={(e, v) => { console.log(v); setPage(v) }} varaiant="outlined" page={page} siblingCount={2} boundaryCount={1} count={Math.ceil(tableItems.length / 10)}
+          sx={{
+            display: { md: 'none', xs: 'block' },
+            ul: { '& .MuiPaginationItem-root': { color: "white", "&.Mui-selected": { backgroundColor: "#D32F28" }, ":hover": { backgroundColor: "#D32F28" } } }
           }}
         />
       </Box>
