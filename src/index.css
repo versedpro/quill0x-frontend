@@ -10,6 +10,10 @@
   font-family: "MontserratFont";
   src: url("./assets/fonts/Montserrat.ttf") format("truetype");
 }
+@font-face {
+  font-family: "RobotoMonoFont";
+  src: url("./assets/fonts/RobotoMono.ttf") format("truetype");
+}
 
 
 body {

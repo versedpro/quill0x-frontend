@@ -52,26 +52,27 @@ const SignerTable = ({ tableItems, isUsdebtSigners }) => {
           display: { md: "flex", xs: "none" },
         }}
       >
-        <Table sx={{ borderBottom: "1px solid #D32F28" }}>
+        <Table sx={{ borderBottom: "1px solid #333333" }}>
           <TableHead>
             <TableRow
               sx={{
-                borderBottom: "1px solid #D32F28",
+                borderBottom: "1px solid #333333",
                 ".MuiTableCell-root": {
                   fontSize: "18px",
-                  color: "#D32F28",
+                  color: "#ffffff",
                   fontWeight: "500",
                   border: "0px",
+                  textShadow: "2px -2px 4px rgba(126, 249, 255, 0.5)"
                 },
               }}
             >
               {isUsdebtSigners ?
                 <>
-                  <TableCell align="left">USDEBT Signers</TableCell>
+                  <TableCell align="left">USDEBT</TableCell>
                   <TableCell align="right">USDEBT Held</TableCell>
                 </> :
                 <>
-                  <TableCell align="left">ETH Signers</TableCell>
+                  <TableCell align="left">ETH</TableCell>
                 </>
               }
             </TableRow>
@@ -197,8 +198,8 @@ const SignerTable = ({ tableItems, isUsdebtSigners }) => {
             display: { md: 'block', xs: 'none' },
             ul: {
               '& .MuiPaginationItem-root': {
-                color: "white", "&.Mui-selected": { backgroundColor: "#D32F28" },
-                ":hover": { backgroundColor: "#D32F28" }
+                color: "white", "&.Mui-selected": { backgroundColor: "#ffffff", color: "#000" },
+                ":hover": { backgroundColor: "#ffffff", color: "#000" }
               }
             }
           }}
@@ -206,7 +207,7 @@ const SignerTable = ({ tableItems, isUsdebtSigners }) => {
         <Pagination onChange={(e, v) => { console.log(v); setPage(v) }} varaiant="outlined" page={page} siblingCount={2} boundaryCount={1} count={Math.ceil(tableItems.length / 10)}
           sx={{
             display: { md: 'none', xs: 'block' },
-            ul: { '& .MuiPaginationItem-root': { color: "white", "&.Mui-selected": { backgroundColor: "#D32F28" }, ":hover": { backgroundColor: "#D32F28" } } }
+            ul: { '& .MuiPaginationItem-root': { color: "white", "&.Mui-selected": { backgroundColor: "#ffffff", color: "#000" }, ":hover": { backgroundColor: "#ffffff", color: "#000" } } }
           }}
         />
       </Box>

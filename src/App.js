@@ -1,6 +1,8 @@
+import { Routes, Route } from "react-router";
 
 import Navbar from "./layout/navbar";
 import Home from "./layout/home";
+import Landing from "./layout/landing";
 import Footer from "./layout/footer";
 
 import { MetaMaskProvider } from "metamask-react";
@@ -26,7 +28,10 @@ function App() {
       <MetaMaskProvider>
         <ThemeProvider theme={createTheme(themeOptions)}>
           <Navbar />
-          <Home />
+          <Routes>
+            <Route exact path="/" element={<Landing />} />
+            <Route exact path="/home" element={<Home />} />
+          </Routes>
           <Footer />
         </ThemeProvider>
       </MetaMaskProvider>
