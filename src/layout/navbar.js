@@ -1,8 +1,77 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Box, Button, Container, Typography } from "@mui/material";
 import { Menu, Close } from "@mui/icons-material";
 import { useMetaMask } from "metamask-react";
+import queryString from 'query-string';
+
+import axios from 'axios';
+
+function ConnectTwitterButton({ showMobileMenu }) {
+
+  const location = useLocation();
+
+  const [twitterName, setTwitterName] = useState('');
+
+  useEffect(() => {
+
+    console.log("location:", location);
+    const parsed = queryString.parse(location.search);
+    console.log("twitter_name", parsed.twitter_name);
+
+    if (parsed.twitter_name) {
+      console.log("from url twitter_name", parsed.twitter_name);
+      localStorage.setItem('twitter_name', parsed.twitter_name);
+      setTwitterName(parsed.twitter_name);
+    } else {
+      const twitterName = localStorage.getItem('twitter_name');
+      console.log("from storage twitter_name", twitterName);
+      if (twitterName) {
+        setTwitterName(twitterName);
+      }
+    }
+  }, [])
+
+  const handleClick = () => {
+    console.log("Twitter connection clicked");
+    if (!twitterName) {
+      connect();
+    }
+  };
+
+  const connect = async () => {
+    try {
+      const res = await axios.post("http://54.193.123.201:8000/api/user/twitter/request");
+      console.log("twitter request res:", res);
+
+      window.location.href = new URL(res.data.url.Path + "?" + res.data.url.RawQuery, res.data.url.Scheme + "://" + res.data.url.Host).toString();
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  return (
+    <Button
+      sx={{
+        width: `${showMobileMenu ? "100%" : "auto"}`,
+        background: "transparent",
+        color: "#ffffff",
+        fontSize: "22px",
+        textTransform: "none",
+        fontWeight: "500",
+        border: "1px solid #ffffff",
+        borderRadius: "8px",
+        ":hover": { background: "#5CD7DD", color: "#000" },
+        display: { xs: `${showMobileMenu ? 'block' : 'none'}`, md: 'block' },
+        padding: "1px 20px",
+        textShadow: "2px -2px 4px rgba(126, 249, 255, 0.5)"
+      }}
+      onClick={handleClick}
+    >
+      {twitterName ? twitterName : "T-Connect"}
+    </Button>
+  );
+}
 
 function ConnectWalletButton({ showMobileMenu }) {
 
@@ -35,13 +104,12 @@ function ConnectWalletButton({ showMobileMenu }) {
       onClick={handleClick}
     >
       {status !== 'connected'
-        ? "Connect"
+        ? "W-Connect"
         : account?.substring(0, 4) + "..." + account?.substring(account.length - 4)
       }
     </Button>
   );
 }
-
 
 function SignPetitionButton({ showMobileMenu }) {
 
@@ -154,7 +222,7 @@ const Navbar = () => {
 
   return (
     <Box
-      sx={{        
+      sx={{
         position: 'fixed',
         width: "100%",
         height: `${showMobileMenu ? "100vh" : "80px"}`,
@@ -193,7 +261,7 @@ const Navbar = () => {
           }}
         >
           <Typography
-            onClick={(e) => { navigate ("/")}}
+            onClick={(e) => { navigate("/") }}
             sx={{
               fontSize: { xs: "24px", md: "30px" },
               color: "#ffffff",
@@ -249,6 +317,7 @@ const Navbar = () => {
               <AirdropButton showMobileMenu={showMobileMenu} />
               <AboutButton showMobileMenu={showMobileMenu} />
               <ConnectWalletButton showMobileMenu={showMobileMenu} />
+              <ConnectTwitterButton showMobileMenu={showMobileMenu} />
             </> :
             <Close
               sx={{
@@ -273,6 +342,7 @@ const Navbar = () => {
           <AirdropButton showMobileMenu={showMobileMenu} />
           <AboutButton showMobileMenu={showMobileMenu} />
           <ConnectWalletButton showMobileMenu={showMobileMenu} />
+          <ConnectTwitterButton showMobileMenu={showMobileMenu} />
         </Container> :
         <></>
       }
