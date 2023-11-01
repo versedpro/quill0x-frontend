@@ -3,12 +3,12 @@ import { useEffect, useState } from "react";
 
 import BannerVideo from "../assets/default-banner.mp4";
 import SignerTable from "../components/signer-table";
-import { Box, Container, Typography, Button, TextField } from "@mui/material";
+import { Box, Container, Typography, Button, TextField, Input } from "@mui/material";
 import { Link, Close, AccountCircle } from "@mui/icons-material";
-import Carousel from 'react-material-ui-carousel';
-import { FacebookShareButton, FacebookIcon, TwitterShareButton, TwitterIcon, EmailShareButton, EmailIcon } from 'next-share';
+import { FacebookIcon, TwitterIcon, EmailIcon } from 'react-share';
 
-import { useMetaMask } from "metamask-react";
+import { useAccount } from 'wagmi';
+
 import { petition_abi } from "../petition_abi";
 import { usdebt_abi } from "../usdebt_abi";
 import Web3, { utils } from 'web3';
@@ -16,20 +16,23 @@ import Moralis from 'moralis';
 
 import { ApolloClient, InMemoryCache, gql } from '@apollo/client';
 
+import queryString from 'query-string';
 import axios from 'axios';
 import CommentTable from "../components/comment-table";
-const web3 = new Web3(window.ethereum);
+
+const web3 = new Web3('https://eth-goerli.g.alchemy.com/v2/oad0JCDVOhPo7Lmd1RMehRhABPr4Adj9');
 // const petitionAddress = '0xe44c1915C6E537745A6a0Dd23AdDFA62649e59d0';
 // const petitionAddress = '0x228bc24aa08e37f6D45C6d4590fd9B5162dCD0a1';
 // const petitionAddress = '0xF529b5a9D55dcB22BB9406e351dC9f0a22fE916E';
-const petitionAddress = '0x704FdcF84aBc85e6A4533e6ED3154A1640097ccB';
+// const petitionAddress = '0x704FdcF84aBc85e6A4533e6ED3154A1640097ccB';
+const petitionAddress = '0x3ad9ab36fc543a43970238A28a0Cb17706898BCF';
 const usdebtAddress = '0xdDA06BCe0E209825F741F0B7049e837493D41f2B';
 const wethAddress = '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6';
 
 const petitionContract = new web3.eth.Contract(petition_abi, petitionAddress);
 const usdebtContract = new web3.eth.Contract(usdebt_abi, usdebtAddress);
 
-const SUBGRAPH_API_URL = 'https://api.studio.thegraph.com/query/51715/usdebt_petition_goerli/version/latest';
+const SUBGRAPH_API_URL = 'https://api.studio.thegraph.com/query/51715/petition_test1/version/latest';
 
 const petitionQuery = `
   query {
@@ -42,6 +45,8 @@ const petitionQuery = `
       started
       to
       description
+      goalSignature
+      goalTokenHeld
       signers {
         id
         address
@@ -57,15 +62,18 @@ const petitionQuery = `
 
 const Home = () => {
 
-    const { account } = useMetaMask();
+    const { address } = useAccount();
+
+    const [twitterName, setTwitterName] = useState('');
+    const [referralCode, setReferralCode] = useState('');
 
     const CAGR = 0.1095;
     const initialDebt = 30928910000000;
     const perSecondGrowthRate = Math.pow(1 + CAGR, 1 / (365 * 24 * 60 * 60)) - 1;
 
-    const nextGoalSignature = 50000;
-    const nextGoalUsdebtHeld = 1000000000000;
-    const nextGoalUsdebtText = "1T";
+    const [nextGoalSignature, setNextGoalSignature] = useState(0);
+    const [nextGoalUsdebtHeld, setNextGoalUsdebtHeld] = useState(0);
+    const [nextGoalUsdebtText, setNextGoalUsdebtText] = useState(0);
 
     const [usdebtPrice, setUsdebtPrice] = useState(0);
     const [usdebtBalanceValue, setUsdebtBalanceValue] = useState(0);
@@ -77,6 +85,7 @@ const Home = () => {
     const [showShareDialog, setShowShareDialog] = useState(false);
     const [readMore, setReadMore] = useState(false);
     const [comment, setComment] = useState("");
+    const [referral, setReferral] = useState("");
     const [selectedTab, setSelectedTab] = useState("signers");
 
     const [isSigned, setIsSigned] = useState(null);
@@ -95,7 +104,6 @@ const Home = () => {
     const [totalUsdebtValue, setTotalUsdebtValue] = useState(0);
 
     const [showPetitionToDialog, setShowPetitionToDialog] = useState(false);
-    const [showCommentDialog, setShowCommentDialog] = useState(false);
 
     const client = new ApolloClient({
         uri: SUBGRAPH_API_URL,
@@ -115,8 +123,22 @@ const Home = () => {
         setDebtClockOptimized(`${(currentDebt / 1000000000000).toFixed(1)}`);
     }
 
+    const onSubmitReferral = async () => {
+        if (!referral) {
+            return;
+        }
+        try {
+            const res = await axios.post("https://auth.petitions3.com/api/user/sign_petition", null, { params: { twitterName, referral } });
+            console.log("submit referral res:", res);
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
     const onSubmitComment = async () => {
-        setShowCommentDialog(false);
+        if (!comment) {
+            return;
+        }
         const jsonString = JSON.stringify({ comment: comment });
         const blob = new Blob([jsonString], { type: 'application/json' });
         const file = new File([blob], 'comment.json', { type: 'application/json' });
@@ -135,9 +157,9 @@ const Home = () => {
             console.log("ipfs hash:", res.data.IpfsHash);
 
             const encodeABI = petitionContract.methods.setComment(res.data.IpfsHash).encodeABI();
-            const txCount = await web3.eth.getTransactionCount(account);
+            const txCount = await web3.eth.getTransactionCount(address);
             const txParams = {
-                from: account, // Replace with your actual sender address
+                from: address, // Replace with your actual sender address
                 to: petitionAddress,
                 gasLimit: web3.utils.toHex(6000000),
                 gasPrice: web3.utils.toHex(1000000000),
@@ -155,19 +177,24 @@ const Home = () => {
     const onSignPetition = async () => {
 
         try {
-            if (account) {
-                const message = "By signing, you endorse the USDEBT petition using your digital signature. No tokens or funds will be transferred. Your voice matters. Thank you and proceed with confidence!";
+            if (address) {
+                const message = `${!twitterName ? "You won't get point if you sign petition without twitter login.\n\n" : ""} By signing, you endorse the USDEBT petition using your digital signature.\nNo tokens or funds will be transferred.\nYour voice matters.\nThank you and proceed with confidence!`;
+                const accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
+                console.log("accounts:", accounts);
                 const signature = await window.ethereum.request({
                     method: 'personal_sign',
-                    params: [web3.utils.utf8ToHex(message), account],
+                    params: [
+                        web3.utils.utf8ToHex(message),
+                        accounts[0]
+                    ],
                 });
                 console.log(`Signature: ${signature}`);
 
                 try {
                     const encodeABI = petitionContract.methods.signPetition(usdebtAddress).encodeABI();
-                    const txCount = await web3.eth.getTransactionCount(account);
+                    const txCount = await web3.eth.getTransactionCount(address);
                     const txParams = {
-                        from: account, // Replace with your actual sender address
+                        from: address, // Replace with your actual sender address
                         to: petitionAddress,
                         gasLimit: web3.utils.toHex(6000000),
                         gasPrice: web3.utils.toHex(1000000000),
@@ -177,47 +204,28 @@ const Home = () => {
                     const receipt = await web3.eth.sendTransaction(txParams);
                     console.log('Sign With USDEBT Transaction receipt:', receipt);
 
-                    setShowCommentDialog(true);
-                    fetchContractData(account);
+                    await onSubmitComment();
+                    await onSubmitReferral();
+
+                    fetchContractData(address);
                 } catch (error) {
                     console.log('Failed signing with USDEBT:', error);
-                    try {
-                        const encodeABI = petitionContract.methods.signPetition(wethAddress).encodeABI();
-                        const txCount = await web3.eth.getTransactionCount(account);
-                        const txParams = {
-                            from: account, // Replace with your actual sender address
-                            to: petitionAddress,
-                            gasLimit: web3.utils.toHex(6000000),
-                            gasPrice: web3.utils.toHex(1000000000),
-                            nonce: web3.utils.toHex(txCount),
-                            data: encodeABI
-                        };
-                        const receipt = await web3.eth.sendTransaction(txParams);
-                        console.log('Sign With ETH Transaction receipt:', receipt);
-
-                        setShowCommentDialog(true);
-                        fetchContractData(account);
-                    } catch (error) {
-                        console.log('Failed signing with ETH:', error);
-                    }
                 }
 
-                fetchContractData(account);
+                fetchContractData(address);
             }
         } catch (error) {
             console.error('Error:', error);
         };
-
-
     }
 
-    const fetchContractData = async (account) => {
+    const fetchContractData = async (address) => {
 
         try {
 
             const data = await client.query({ query: gql(petitionQuery) });
             const petition_data = data.data.petitions;
-            console.log("pedition data:", petition_data);
+            console.log("petition data:", petition_data);
             if (petition_data.length != 0) {
                 setPetitionTitle(petition_data[0].title ? petition_data[0].title : "");
                 setPetitionSubtitle(petition_data[0].subtitle ? petition_data[0].subtitle : "");
@@ -231,6 +239,40 @@ const Home = () => {
                 setPetitionTo(tmpPetitionTo);
                 setPetitionDescription(petition_data[0].description ? petition_data[0].description.split("  ") : []);
 
+                setNextGoalSignature(petition_data[0].goalSignature ? Number(petition_data[0].goalSignature) : 0);
+                const goalTokenHeld = petition_data[0].goalTokenHeld ? Number(petition_data[0].goalTokenHeld) : 0;
+                setNextGoalUsdebtHeld(goalTokenHeld);
+                if (goalTokenHeld / 1000000000000 >= 1) {
+                    setNextGoalUsdebtText(`${(goalTokenHeld / 1000000000000).toFixed(1)}T`);
+                } else if (goalTokenHeld / 1000000000 >= 1) {
+                    setNextGoalUsdebtText(`${(goalTokenHeld / 1000000000).toFixed(1)}B`);
+                } else if (goalTokenHeld / 1000000 >= 1) {
+                    setNextGoalUsdebtText(`${(goalTokenHeld / 1000000).toFixed(1)}M`);
+                } else if (goalTokenHeld / 1000 >= 1) {
+                    setNextGoalUsdebtText(`${(goalTokenHeld / 1000).toFixed(1)}K`);
+                } else {
+                    setNextGoalUsdebtText(`${(goalTokenHeld).toFixed(1)}`);
+                }
+
+                if (address) {
+                    const tmpAddressBalance = await usdebtContract.methods.balanceOf(address).call();
+
+                    const balance = Number(web3.utils.fromWei(tmpAddressBalance, 'ether'));
+
+                    setUsdebtBalanceValue(balance);
+                    if (balance / 1000000000000 >= 1) {
+                        setUsdebtBalance(`${(balance / 1000000000000).toFixed(1)}T`);
+                    } else if (balance / 1000000000 >= 1) {
+                        setUsdebtBalance(`${(balance / 1000000000).toFixed(1)}B`);
+                    } else if (balance / 1000000 >= 1) {
+                        setUsdebtBalance(`${(balance / 1000000).toFixed(1)}M`);
+                    } else if (balance / 1000 >= 1) {
+                        setUsdebtBalance(`${(balance / 1000).toFixed(1)}K`);
+                    } else {
+                        setUsdebtBalance(`${(balance).toFixed(1)}`);
+                    }
+                }
+
                 let is_signed = false;
                 let total_usdebt = 0;
                 let tmpUsdebtSignersInfo = [];
@@ -238,31 +280,16 @@ const Home = () => {
                 let tmpCommentURIs = [];
                 for (let i = 0; i < petition_data[0].signers.length; i++) {
 
-                    if (account && petition_data[0].signers[i].address.toLowerCase() == account.toLowerCase()) {
+                    if (address && petition_data[0].signers[i].address.toLowerCase() == address.toLowerCase()) {
                         is_signed = true;
                     }
 
                     tmpCommentURIs.push({ signer: petition_data[0].signers[i].address, commentURI: petition_data[0].signers[i].comment });
 
-                    const eth_balance = await web3.eth.getBalance(petition_data[0].signers[i].address);
+                    // const eth_balance = await web3.eth.getBalance(petition_data[0].signers[i].address);
                     const token_balance = await usdebtContract.methods.balanceOf(petition_data[0].signers[i].address).call();
 
                     const balance = Number(web3.utils.fromWei(token_balance, 'ether'));
-
-                    if (petition_data[0].signers[i].address == account) {
-                        setUsdebtBalanceValue(balance);
-                        if (balance / 1000000000000 >= 1) {
-                            setUsdebtBalance(`${(balance / 1000000000000).toFixed(1)}T`);
-                        } else if (balance / 1000000000 >= 1) {
-                            setUsdebtBalance(`${(balance / 1000000000).toFixed(1)}B`);
-                        } else if (balance / 1000000 >= 1) {
-                            setUsdebtBalance(`${(balance / 1000000).toFixed(1)}M`);
-                        } else if (balance / 1000 >= 1) {
-                            setUsdebtBalance(`${(balance / 1000).toFixed(1)}K`);
-                        } else {
-                            setUsdebtBalance(`${(balance).toFixed(1)}`);
-                        }
-                    }
 
                     total_usdebt += balance;
 
@@ -270,13 +297,13 @@ const Home = () => {
                         tmpUsdebtSignersInfo.push({
                             signerAddress: petition_data[0].signers[i].address,
                             usdebtBalance: Number(web3.utils.fromWei(token_balance, 'ether')).toFixed(2),
-                            ethBalance: Number(web3.utils.fromWei(eth_balance, 'ether')).toFixed(2)
+                            // ethBalance: Number(web3.utils.fromWei(eth_balance, 'ether')).toFixed(2)
                         });
                     } else if (petition_data[0].signers[i].token.address.toLowerCase() == wethAddress.toLowerCase()) {
                         tmpEthSignersInfo.push({
                             signerAddress: petition_data[0].signers[i].address,
                             usdebtBalance: Number(web3.utils.fromWei(token_balance, 'ether')).toFixed(2),
-                            ethBalance: Number(web3.utils.fromWei(eth_balance, 'ether')).toFixed(2)
+                            // ethBalance: Number(web3.utils.fromWei(eth_balance, 'ether')).toFixed(2)
                         });
                     }
                 }
@@ -315,14 +342,25 @@ const Home = () => {
     }
 
     useEffect(() => {
-        fetchContractData(account);
-    }, [account]);
+        fetchContractData(address);
+    }, [address]);
 
     useEffect(() => {
 
+        const twitterName = localStorage.getItem('twitter_name');
+        console.log("from storage twitter_name", twitterName);
+        if (twitterName) {
+            setTwitterName(twitterName);
+        }
+
+        const referralCode = localStorage.getItem('referral_code');
+        console.log("from storage referral_code", referralCode);
+        if (referralCode) {
+            setReferralCode(referralCode);
+        }
+
         const fetchUsdebtPrice = async () => {
             try {
-
                 const total_supply = Number(web3.utils.fromWei(await usdebtContract.methods.totalSupply().call(), 'ether')).toFixed(2);
                 if (total_supply / 1000000000000 >= 1) {
                     setUsdebtTotalSupply(`${(total_supply / 1000000000000).toFixed(1)}T`);
@@ -470,7 +508,7 @@ const Home = () => {
                         sx={{
                             display: 'flex',
                             flexDirection: 'row',
-                            justifyContent: 'end',
+                            justifyContent: { md: 'end', xs: 'center' },
                             alignItems: 'center',
                             gap: '20px',
                             img: { width: '30px', height: '30px', objectFit: 'contain' }
@@ -824,6 +862,56 @@ const Home = () => {
                                     </Box>
                                 </Box>
                             </Box>
+                            <TextField
+                                onChange={(e) => setComment(e.target.value)}
+                                value={comment}
+                                placeholder="Comment"
+                                multiline
+                                maxRows={7}
+                                sx={{
+                                    marginTop: '20px',
+                                    width: '100%',
+                                    height: '200px',
+                                    border: 'solid 1px white',
+                                    '.MuiInputBase-root': { color: 'white' },
+                                    '.MuiOutlinedInput-notchedOutline': { border: 'none' },
+                                    borderRadius: '5px'
+                                }}
+                            />
+                            <Box
+                                sx={{
+                                    marginTop: '20px',
+                                    width: '100%',
+                                    display: 'flex',
+                                    flexDirection: 'row',
+                                    gap: '20px',
+                                    justifyContent: 'end',
+                                    alignItems: 'center'
+                                }}
+                            >
+                                <Typography
+                                    sx={{
+                                        fontSize: "20px",
+                                        fontWeight: '500',
+                                        color: "#FFFFFF",
+                                    }}
+                                >
+                                    Code:
+                                </Typography>
+                                <Input
+                                    onChange={(e) => setReferral(e.target.value)}
+                                    value={referral}
+                                    placeholder="Referral Code"
+                                    sx={{
+                                        color: 'white',
+                                        width: '100%',
+                                        border: 'solid 1px white',
+                                        borderRadius: '5px',
+                                        paddingLeft: '10px',
+                                        paddingRight: '10px'
+                                    }}
+                                />
+                            </Box>
                             <Box
                                 sx={{
                                     display: { md: 'none', xs: 'flex' },
@@ -977,16 +1065,14 @@ const Home = () => {
                                     <Button
                                         onClick={(e) => { onSignPetition() }}
                                         sx={{
-                                            height: '80px',
-                                            width: '300px',
                                             // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                             backgroundColor: '#ffffff',
                                             color: "#000",
-                                            fontSize: "27px",
+                                            fontSize: { xl: "25px", xs: "20px" },
                                             fontWeight: '500',
                                             textTransform: "none",
                                             borderRadius: "20px",
-                                            padding: "5px 30px",
+                                            padding: "10px 30px",
                                             boxShadow: 3,
                                             ":hover": { background: "#5CD7DD" },
                                             ":disabled": { color: "#ffffff70", background: "#ffffff70" }
@@ -1039,16 +1125,14 @@ const Home = () => {
                                     <Button
                                         onClick={(e) => { console.log(showShareDialog); setShowShareDialog(true) }}
                                         sx={{
-                                            height: '80px',
-                                            width: '300px',
                                             // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                             backgroundColor: '#ffffff',
                                             color: "#000",
-                                            fontSize: "27px",
+                                            fontSize: { xl: "25px", xs: "20px" },
                                             fontWeight: '500',
                                             textTransform: "none",
                                             borderRadius: "20px",
-                                            padding: "5px 30px",
+                                            padding: "10px 30px",
                                             boxShadow: 3,
                                             ":hover": { background: "#5CD7DD" }
                                         }}
@@ -1367,16 +1451,15 @@ const Home = () => {
                             <Button
                                 onClick={(e) => { onSignPetition() }}
                                 sx={{
-                                    height: '80px',
-                                    width: { md: '300px', xs: '100%' },
+                                    width: { md: 'auto', xs: '100%' },
                                     // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                     backgroundColor: '#ffffff',
                                     color: "#000",
-                                    fontSize: "27px",
+                                    fontSize: { xl: "25px", xs: "20px" },
                                     fontWeight: '500',
                                     textTransform: "none",
                                     borderRadius: "20px",
-                                    padding: "5px 30px",
+                                    padding: "10px 30px",
                                     boxShadow: 3,
                                     ":hover": { background: "#5CD7DD" },
                                     ":disabled": { color: "#ffffff70", background: "#ffffff70" }
@@ -1594,26 +1677,21 @@ const Home = () => {
                                     paddingBottom: '5px'
                                 }}
                             >
-                                <FacebookShareButton
-                                    url={'https://usdebt'}
-                                    quote={'usdebt is'}
-                                    hashtag={'#usdebt'}
+                                <Button
+                                    onClick={(e) => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.petition3.com')}&quote=${encodeURIComponent(`Please sign the USDEBT petition.\nReferral Code: ${referralCode}`)}`, '_blank'); }}
+                                    sx={{
+                                        width: '100%',
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        gap: '5px'
+                                    }}
                                 >
-                                    <Box
-                                        sx={{
-                                            width: '100%',
-                                            height: '100%',
-                                            display: 'flex',
-                                            flexDirection: 'row',
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            gap: '5px'
-                                        }}
-                                    >
-                                        <FacebookIcon size={24} round />
-                                        <b>Facebook</b>
-                                    </Box>
-                                </FacebookShareButton>
+                                    <FacebookIcon size={24} round />
+                                    <b>Facebook</b>
+                                </Button>
                             </Box>
                             <Box
                                 sx={{
@@ -1629,26 +1707,21 @@ const Home = () => {
                                     paddingBottom: '5px'
                                 }}
                             >
-                                <TwitterShareButton
-                                    url={'https://usdebt'}
-                                    quote={'usdebt is'}
-                                    hashtag={'#usdebt'}
+                                <Button
+                                    onClick={(e) => { window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent('https://www.petition3.com')}&text=${encodeURIComponent(`Please sign the USDEBT petition.\nReferral Code: ${referralCode}`)}`, '_blank'); }}
+                                    sx={{
+                                        width: '100%',
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        gap: '5px'
+                                    }}
                                 >
-                                    <Box
-                                        sx={{
-                                            width: '100%',
-                                            height: '100%',
-                                            display: 'flex',
-                                            flexDirection: 'row',
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            gap: '5px'
-                                        }}
-                                    >
-                                        <TwitterIcon size={24} round />
-                                        <b>Twitter</b>
-                                    </Box>
-                                </TwitterShareButton>
+                                    <TwitterIcon size={24} round />
+                                    <b>Twitter</b>
+                                </Button>
                             </Box>
                             <Box
                                 sx={{
@@ -1664,26 +1737,21 @@ const Home = () => {
                                     paddingBottom: '5px'
                                 }}
                             >
-                                <EmailShareButton
-                                    url={'https://usdebt'}
-                                    quote={'usdebt is'}
-                                    hashtag={'#usdebt'}
+                                <Button
+                                    onClick={(e) => { window.open(`mailto:?subject=${encodeURIComponent('https://www.petition3.com')}&body=${encodeURIComponent(`Please sign the USDEBT petition.\nReferral Code: ${referralCode}`)}`, '_blank'); }}
+                                    sx={{
+                                        width: '100%',
+                                        height: '100%',
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        gap: '5px'
+                                    }}
                                 >
-                                    <Box
-                                        sx={{
-                                            width: '100%',
-                                            height: '100%',
-                                            display: 'flex',
-                                            flexDirection: 'row',
-                                            justifyContent: 'center',
-                                            alignItems: 'center',
-                                            gap: '5px'
-                                        }}
-                                    >
-                                        <EmailIcon size={24} round />
-                                        <b>Email</b>
-                                    </Box>
-                                </EmailShareButton>
+                                    <EmailIcon size={24} round />
+                                    <b>Email</b>
+                                </Button>
                             </Box>
                         </Box>
                     </Box>
@@ -1797,103 +1865,6 @@ const Home = () => {
                                     </Box>
                                 )
                             })}
-                        </Box>
-                    </Box>
-                </Box> :
-                <></>
-            }
-            {showCommentDialog ?
-                <Box
-                    sx={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        backdropFilter: "blur(5px)",
-                        display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        zIndex: '100'
-                    }}
-                >
-                    <Box
-                        sx={{
-                            backgroundColor: 'black',
-                            borderRadius: '30px',
-                            boxShadow: "2px 0px 1px rgba(150, 150, 150, 0.5)",
-                            padding: '20px',
-                            width: '400px',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '20px'
-                        }}
-                    >
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                flexDirection: 'row',
-                                justifyContent: 'space-between',
-                                alignItems: 'center'
-                            }}
-                        >
-                            <Typography
-                                sx={{
-                                    fontSize: "28px",
-                                    fontWeight: '500',
-                                    color: "#FFFFFF",
-                                }}
-                            >
-                                Submit Your Comment
-                            </Typography>
-                            <Close
-                                onClick={(e) => setShowCommentDialog(false)}
-                                sx={{
-                                    color: '#8f8f8f',
-                                    ':hover': { color: 'white' },
-                                    cursor: 'pointer'
-                                }}
-                            />
-                        </Box>
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '20px'
-                            }}
-                        >
-                            <TextField
-                                onChange={(e) => setComment(e.target.value)}
-                                value={comment}
-                                placeholder="Comment"
-                                multiline
-                                maxRows={7}
-                                sx={{
-                                    width: '100%',
-                                    height: '200px',
-                                    border: 'solid 1px white',
-                                    '.MuiInputBase-root': { color: 'white' },
-                                    '.MuiOutlinedInput-notchedOutline': { border: 'none' },
-                                    borderRadius: '5px'
-                                }}
-                            />
-                            <Button
-                                onClick={(e) => { onSubmitComment() }}
-                                sx={{
-                                    background: 'linear-gradient(to bottom, #11203E, #314E85)',
-                                    color: "#FFFFFF",
-                                    fontSize: "20px",
-                                    fontWeight: '500',
-                                    textTransform: "none",
-                                    borderRadius: "20px",
-                                    padding: "5px 20px",
-                                    boxShadow: 3,
-                                    ":hover": { background: "#5CD7DD" }
-                                }}
-                            >
-                                Submit
-                            </Button>
                         </Box>
                     </Box>
                 </Box> :

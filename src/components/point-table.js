@@ -11,7 +11,7 @@ import {
   Pagination
 } from "@mui/material";
 
-const CommentTable = ({ tableItems }) => {
+const PointTable = ({ tableItems }) => {
 
   const [page, setPage] = useState(1);
 
@@ -45,8 +45,9 @@ const CommentTable = ({ tableItems }) => {
                 },
               }}
             >
-              <TableCell align="left">Comment</TableCell>
-              <TableCell align="right">Signer</TableCell>
+              <TableCell align="left">User</TableCell>
+              <TableCell align="right"># of Referrals</TableCell>
+              <TableCell align="right">Total Points</TableCell>              
             </TableRow>
           </TableHead>
           <TableBody>
@@ -67,8 +68,9 @@ const CommentTable = ({ tableItems }) => {
                     },
                   }}
                 >
-                  <TableCell align="left">{item.comment}</TableCell>
-                  <TableCell align="right">{item.signer.substring(0, 4) + "..." + item.signer.substring(item.signer.length - 4)}</TableCell>
+                  <TableCell align="left">{item.twitter_name}</TableCell>
+                  <TableCell align="right">{item.referred_points}</TableCell>
+                  <TableCell align="right">{item.total_points}</TableCell>
                 </TableRow>
               ))}
           </TableBody>
@@ -97,4 +99,4 @@ const CommentTable = ({ tableItems }) => {
   );
 };
 
-export default CommentTable;
+export default PointTable;

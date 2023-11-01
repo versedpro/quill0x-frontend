@@ -158,7 +158,7 @@ const SignerTable = ({ tableItems, isUsdebtSigners }) => {
                   display: "flex",
                   flexDirection: "row",
                   alignItems: "center",
-                  justifyContent: "space-between",
+                  justifyContent: "end",
                   ".MuiTypography-root": {
                     fontSize: "16px",
                     color: "#808080",
@@ -171,7 +171,7 @@ const SignerTable = ({ tableItems, isUsdebtSigners }) => {
                     tokenIconUrl={"./logo192.png"}
                   />
                 </Box>
-                <Box
+                {/* <Box
                   sx={{ width: "1px", height: "24px", background: "#808080" }}
                 />
                 <Box>
@@ -181,7 +181,7 @@ const SignerTable = ({ tableItems, isUsdebtSigners }) => {
                       "https://cryptologos.cc/logos/ethereum-eth-logo.svg"
                     }
                   />
-                </Box>
+                </Box> */}
               </Box>
             </Box>
           ))}
