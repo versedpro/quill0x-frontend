@@ -62,7 +62,7 @@ const SignerTable = ({ tableItems, isUsdebtSigners }) => {
                   color: "#ffffff",
                   fontWeight: "500",
                   border: "0px",
-                  textShadow: "2px -2px 4px rgba(126, 249, 255, 0.5)"
+                  textShadow: "0px 0px 5px #7DF9FF"
                 },
               }}
             >

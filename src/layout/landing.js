@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Box, Container, Typography, Button, TextField } from "@mui/material";
 import { ArrowCircleLeft, ArrowCircleRight } from "@mui/icons-material";
 import Carousel from 'react-material-ui-carousel';
+import ReactPlayer from 'react-player';
 
 const Landing = () => {
 
@@ -12,14 +13,41 @@ const Landing = () => {
     return (
         <>
             <Box sx={{
+                position: 'relative',
                 width: '100%',
-                height: '100%'
+                height: '100%',
             }}>
+                {/* <Box
+                    sx={{
+                        position: 'fixed',
+                        width: "100%",
+                        height: '100%',
+                        paddingRight: { md: "100px", xs: "10px" },
+                        paddingLeft: { md: "100px", xs: "10px" },
+                        zIndex: -1,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        overflow: 'hidden'
+                    }}
+                >
+                    <ReactPlayer url="/bg.mov" playing loop muted width='auto'
+                        height='auto'
+                        fileConfig={{
+                            attributes: {
+                                style: {
+                                    display: 'block',
+                                    width: 'auto',
+                                    height: 'auto'
+                                }
+                            }
+                        }} />
+                </Box> */}
                 <Container
                     sx={{
+                        minHeight: '100vh',
+                        position: 'relative',
                         maxWidth: "1600px!important",
-                        paddingTop: "80px",
-                        paddingBottom: "50px",
                         paddingRight: { md: "100px", xs: "30px" },
                         paddingLeft: { md: "100px", xs: "30px" },
                         '.MuiButton-root': {
@@ -30,18 +58,23 @@ const Landing = () => {
                         },
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '50px'
+                        gap: '50px',
+                        // backgroundImage: "url('/bg.gif')",
+                        // backgroundRepeat: 'no-repeat',
+                        // backgroundSize: 'cover'
+                        overflow: 'hidden'
                     }}
                 >
                     <Box
                         sx={{
+                            paddingTop: "80px",
                             display: 'flex',
                             flexDirection: 'column'
                         }}
                     >
                         <Box
                             sx={{
-                                padding: '200px 0',
+                                padding: '100px 0',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 gap: '30px'
@@ -50,7 +83,7 @@ const Landing = () => {
                             <Typography
                                 sx={{
                                     color: '#ffffff',
-                                    fontSize: { md: '40px', xs: '32px' },
+                                    fontSize: { md: '40px', xs: '24px' },
                                     fontWeight: '900',
                                     textAlign: 'center'
                                 }}
@@ -60,41 +93,13 @@ const Landing = () => {
                             <Typography
                                 sx={{
                                     color: '#ffffff',
-                                    fontSize: { md: '40px', xs: '32px' },
+                                    fontSize: { md: '40px', xs: '24px' },
                                     fontWeight: '900',
                                     textAlign: 'center'
                                 }}
                             >
-                                Let's build crypto's next big sector together.
+                                Let's build crypto's next great sector together.
                             </Typography>
-                        </Box>
-                        <Box
-                            sx={{
-                                display: 'flex',
-                                flexDirection: 'row',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            <Button
-                                onClick={(e) => { }}
-                                sx={{
-                                    height: '80px',
-                                    width: { md: '500px', xs: '100%' },
-                                    // background: 'linear-gradient(to bottom, #11203E, #314E85)',
-                                    backgroundColor: '#ffffff',
-                                    color: "#000",
-                                    fontSize: { md: "27px", xs: '20px' },
-                                    fontWeight: '500',
-                                    textTransform: "none",
-                                    borderRadius: "20px",
-                                    padding: "5px 30px",
-                                    boxShadow: 3,
-                                    ":hover": { background: "#5CD7DD" },
-                                    ":disabled": { color: "#ffffff70", background: "#ffffff70" }
-                                }}
-                            >
-                                Advocate and Earn $IMPACT
-                            </Button>
                         </Box>
                     </Box>
                     <Box
@@ -166,7 +171,7 @@ const Landing = () => {
                                     }}
                                 >
                                     <Button
-                                        onClick={(e) => {  navigate("/home") }}
+                                        onClick={(e) => { navigate("/home") }}
                                         sx={{
                                             marginTop: '50px',
                                             height: '60px',
@@ -269,7 +274,7 @@ const Landing = () => {
                                             img: { width: '30px', height: '30px', objectFit: 'contain' }
                                         }}
                                     >
-                                        <Box sx={{height: "30px"}}></Box>
+                                        <Box sx={{ height: "30px" }}></Box>
                                         {/* <img alt="" src={"./logo1921.png"} />
                                         <Typography
                                             sx={{
@@ -341,7 +346,7 @@ const Landing = () => {
                                             img: { width: '30px', height: '30px', objectFit: 'contain' }
                                         }}
                                     >
-                                        <Box sx={{height: "30px"}}></Box>
+                                        <Box sx={{ height: "30px" }}></Box>
                                         {/* <img alt="" src={"./logo1921.png"} />
                                         <Typography
                                             sx={{
@@ -422,7 +427,7 @@ const Landing = () => {
                                             img: { width: '30px', height: '30px', objectFit: 'contain' }
                                         }}
                                     >
-                                        <Box sx={{height: "30px"}}></Box>
+                                        <Box sx={{ height: "30px" }}></Box>
                                         {/* <img alt="" src={"./logo1921.png"} />
                                         <Typography
                                             sx={{
@@ -494,7 +499,7 @@ const Landing = () => {
                                             img: { width: '30px', height: '30px', objectFit: 'contain' }
                                         }}
                                     >
-                                        <Box sx={{height: "30px"}}></Box>
+                                        <Box sx={{ height: "30px" }}></Box>
                                         {/* <img alt="" src={"./logo1921.png"} />
                                         <Typography
                                             sx={{
@@ -566,7 +571,7 @@ const Landing = () => {
                                             img: { width: '30px', height: '30px', objectFit: 'contain' }
                                         }}
                                     >
-                                        <Box sx={{height: "30px"}}></Box>
+                                        <Box sx={{ height: "30px" }}></Box>
                                         {/* <img alt="" src={"./logo1921.png"} />
                                         <Typography
                                             sx={{
@@ -635,7 +640,7 @@ const Landing = () => {
                                 }}
                             >
                                 <Button
-                                    onClick={(e) => {  /*navigate("/home")*/ }}
+                                    onClick={(e) => { navigate("/home") }}
                                     sx={{
                                         marginTop: '50px',
                                         height: '60px',
@@ -738,7 +743,7 @@ const Landing = () => {
                                         img: { width: '30px', height: '30px', objectFit: 'contain' }
                                     }}
                                 >
-                                    <Box sx={{height: "30px"}}></Box>
+                                    <Box sx={{ height: "30px" }}></Box>
                                     {/* <img alt="" src={"./logo1921.png"} />
                                     <Typography
                                         sx={{
@@ -810,7 +815,7 @@ const Landing = () => {
                                         img: { width: '30px', height: '30px', objectFit: 'contain' }
                                     }}
                                 >
-                                    <Box sx={{height: "30px"}}></Box>
+                                    <Box sx={{ height: "30px" }}></Box>
                                     {/* <img alt="" src={"./logo1921.png"} />
                                     <Typography
                                         sx={{
@@ -882,7 +887,7 @@ const Landing = () => {
                                         img: { width: '30px', height: '30px', objectFit: 'contain' }
                                     }}
                                 >
-                                    <Box sx={{height: "30px"}}></Box>
+                                    <Box sx={{ height: "30px" }}></Box>
                                     {/* <img alt="" src={"./logo1921.png"} />
                                     <Typography
                                         sx={{
@@ -954,7 +959,7 @@ const Landing = () => {
                                         img: { width: '30px', height: '30px', objectFit: 'contain' }
                                     }}
                                 >
-                                    <Box sx={{height: "30px"}}></Box>
+                                    <Box sx={{ height: "30px" }}></Box>
                                     {/* <img alt="" src={"./logo1921.png"} />
                                     <Typography
                                         sx={{
@@ -1026,7 +1031,7 @@ const Landing = () => {
                                         img: { width: '30px', height: '30px', objectFit: 'contain' }
                                     }}
                                 >
-                                    <Box sx={{height: "30px"}}></Box>
+                                    <Box sx={{ height: "30px" }}></Box>
                                     {/* <img alt="" src={"./logo1921.png"} />
                                     <Typography
                                         sx={{
@@ -1097,10 +1102,67 @@ const Landing = () => {
                                 textAlign: 'center'
                             }}
                         >
-                            The Process of the Promotion
+                            How Petition3 Works
                         </Typography>
                     </Box>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            paddingBottom: "200px",
+                        }}
+                    >
+                        <Button
+                            onClick={(e) => { }}
+                            sx={{
+                                height: '80px',
+                                width: { md: '500px', xs: '100%' },
+                                // background: 'linear-gradient(to bottom, #11203E, #314E85)',
+                                backgroundColor: '#ffffff',
+                                color: "#000",
+                                fontSize: { md: "27px", xs: '20px' },
+                                fontWeight: '500',
+                                textTransform: "none",
+                                borderRadius: "20px",
+                                padding: "5px 30px",
+                                boxShadow: 3,
+                                ":hover": { background: "#5CD7DD" },
+                                ":disabled": { color: "#ffffff70", background: "#ffffff70" }
+                            }}
+                        >
+                            Earn IMPACT tokens
+                        </Button>
+                    </Box>
+                    <Box
+                        sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            bottom: 0,
+                            right: 0,
+                            width: '100%',
+                            height: '100%',
+                            zIndex: -1,
+                            img: { width: '100%', height: '100%', objectFit: 'cover' }
+                        }}
+                    >
+                        <img src="/bg.gif" alt="bg" />
+                    </Box>
                 </Container>
+                {/* <Box
+                    sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        zIndex: -1,
+                        img: { width: '100%', height: '100%', objectFit: 'cover' }
+                    }}
+                >
+                    <img src="/bg.gif" alt="bg" />
+                </Box> */}
             </Box>
         </>
     );

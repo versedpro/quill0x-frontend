@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import DarkTwitter from "../assets/images/social/dark-twitter.svg";
+import LightX from "../assets/images/social/light-x.png";
 
 import { Box, Typography, Button } from "@mui/material";
 
@@ -65,7 +65,7 @@ const TwitterLogin = () => {
                         fontWeight: "900"
                     }}
                 >
-                    <span style={{ textShadow: "2px -2px 4px rgba(126, 249, 255, 0.5)" }} >
+                    <span style={{ textShadow: "0px 0px 5px #7DF9FF" }} >
                         Petitions3
                     </span>
                 </Typography>
@@ -76,33 +76,33 @@ const TwitterLogin = () => {
                         textAlign: 'center'
                     }}
                 >
-                    <span style={{ textShadow: "2px -2px 4px rgba(126, 249, 255, 0.5)" }} >
+                    <span style={{ textShadow: "0px 0px 5px #7DF9FF" }} >
                         Get rewarded for advocating on X with your friends!
                     </span>
                 </Typography>
                 <Button
                     sx={{
-                        background: "#02aef0",
+                        background: "#ffffff",
                         borderRadius: "46px",
-                        ":hover": { background: "#008ac0" },
-                        padding: "15px 40px",
-                        textShadow: "2px -2px 4px rgba(126, 249, 255, 0.5)",
+                        ":hover": { background: "#ffffff50" },
+                        padding: "10px 20px",
                         display: 'flex',
-                        gap: '20px',
+                        alignItems: 'center',
+                        gap: '10px',
                         textTransform: "none",
                     }}
                     onClick={handleConnectTwitter}
                 >
-                    <img width={30} height={30} src={DarkTwitter} alt="twitter_link" />
                     <Typography
                         sx={{
                             fontSize: "16px",
-                            color: "#ffffff",
+                            color: "#000",
                             letterSpacing: '0px',
                         }}
                     >
-                        Login with Twitter
+                        Login with
                     </Typography>
+                    <img width={30} height={30} src={LightX} alt="twitter_link" />
                 </Button>
             </Box>
         </Box>

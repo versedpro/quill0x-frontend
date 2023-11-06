@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import BannerVideo from "../assets/default-banner.mp4";
 import SignerTable from "../components/signer-table";
 import { Box, Container, Typography, Button, TextField, Input } from "@mui/material";
-import { Link, Close, AccountCircle } from "@mui/icons-material";
+import { Link, Close, AccountCircle, Share } from "@mui/icons-material";
 import { FacebookIcon, TwitterIcon, EmailIcon } from 'react-share';
 
 import { useAccount } from 'wagmi';
@@ -179,7 +179,7 @@ const Home = () => {
         try {
             if (address) {
                 const message = `${!twitterName ? "You won't get point if you sign petition without twitter login.\n\n" : ""} By signing, you endorse the USDEBT petition using your digital signature.\nNo tokens or funds will be transferred.\nYour voice matters.\nThank you and proceed with confidence!`;
-                const accounts = await window.ethereum.request({method: 'eth_requestAccounts'});
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                 console.log("accounts:", accounts);
                 const signature = await window.ethereum.request({
                     method: 'personal_sign',
@@ -420,7 +420,7 @@ const Home = () => {
                         gap: '50px'
                     }}
                 >
-                    <Box
+                    {/* <Box
                         sx={{
                             padding: "20px 0",
                             display: 'flex',
@@ -503,7 +503,7 @@ const Home = () => {
                                 </Typography>
                             </Box>
                         </Box>
-                    </Box>
+                    </Box> */}
                     <Box
                         sx={{
                             display: 'flex',
@@ -569,7 +569,6 @@ const Home = () => {
                             flexDirection: { md: 'row', xs: 'column' },
                             gap: '20px',
                             video: {
-                                width: { md: "50%", xs: "100%" },
                                 border: "0.6px solid #333333",
                                 borderRadius: "20px"
                             },
@@ -867,11 +866,11 @@ const Home = () => {
                                 value={comment}
                                 placeholder="Comment"
                                 multiline
-                                maxRows={7}
+                                maxRows={2}
                                 sx={{
                                     marginTop: '20px',
                                     width: '100%',
-                                    height: '200px',
+                                    height: '80px',
                                     border: 'solid 1px white',
                                     '.MuiInputBase-root': { color: 'white' },
                                     '.MuiOutlinedInput-notchedOutline': { border: 'none' },
@@ -936,9 +935,6 @@ const Home = () => {
                                             // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                             backgroundColor: '#ffffff',
                                             color: "#000",
-                                            fontSize: "27px",
-                                            fontWeight: '500',
-                                            textTransform: "none",
                                             borderRadius: "20px",
                                             padding: "5px 30px",
                                             boxShadow: 3,
@@ -947,43 +943,26 @@ const Home = () => {
                                         }}
                                         disabled={isSigned}
                                     >
-                                        {isSigned ? "Petition Signed" : "Sign Petition"}
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                gap: '10px',
+                                                alignItems: 'center',
+                                                img: { width: '40px', height: '40px', objectFit: 'contain', borderRadius: '100%' }
+                                            }}
+                                        >
+                                            <img src="/P3WebAppLogoBlack.png" alt="chainLogo" />
+                                            <Typography
+                                                sx={{
+                                                    fontSize: "27px",
+                                                    fontWeight: '500',
+                                                    textTransform: "none",
+                                                    letterSpacing: '0px',
+                                                }}
+                                            >{isSigned ? "Petition Signed" : "Sign Petition"}</Typography>
+                                        </Box>
                                     </Button>
                                 </Box>
-                                {/* <Box
-                                    sx={{
-                                        width: '100%',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        gap: '10px',
-                                        backgroundColor: "#111111",
-                                        paddingTop: '20px',
-                                        paddingBottom: '20px',
-                                        borderRadius: '10px'
-                                    }}
-                                >
-                                    <Typography
-                                        sx={{
-                                            textAlign: "center",
-                                            fontSize: { md: "28px", xs: "24px" },
-                                            fontWeight: '500',
-                                            color: "#FFFFFF",
-                                        }}
-                                    >
-                                        Number of<br />Signers
-                                    </Typography>
-                                    <Typography
-                                        sx={{
-                                            textAlign: "justify",
-                                            fontSize: { md: "72px", xs: "68px" },
-                                            fontWeight: '700',
-                                            color: "#FFFFFF",
-                                        }}
-                                    >
-                                        {numberWithCommas(ethSignersInfo.length + usdebtSignersInfo.length)}
-                                    </Typography>
-                                </Box> */}
                                 <Box
                                     sx={{
                                         width: '100%',
@@ -998,8 +977,6 @@ const Home = () => {
                                             // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                             backgroundColor: '#ffffff',
                                             color: "#000",
-                                            fontSize: "27px",
-                                            fontWeight: '500',
                                             textTransform: "none",
                                             borderRadius: "20px",
                                             padding: "5px 30px",
@@ -1007,7 +984,24 @@ const Home = () => {
                                             ":hover": { background: "#5CD7DD" }
                                         }}
                                     >
-                                        Share Petition
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                gap: '10px',
+                                                alignItems: 'center',
+                                                img: { width: '40px', height: '40px', objectFit: 'contain', borderRadius: '100%' }
+                                            }}
+                                        >
+                                            <Share />
+                                            <Typography
+                                                sx={{
+                                                    fontSize: "27px",
+                                                    fontWeight: '500',
+                                                    textTransform: "none",
+                                                    letterSpacing: '0px',
+                                                }}
+                                            >Share Petition</Typography>
+                                        </Box>
                                     </Button>
                                 </Box>
                                 {/* <Box
@@ -1068,8 +1062,6 @@ const Home = () => {
                                             // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                             backgroundColor: '#ffffff',
                                             color: "#000",
-                                            fontSize: { xl: "25px", xs: "20px" },
-                                            fontWeight: '500',
                                             textTransform: "none",
                                             borderRadius: "20px",
                                             padding: "10px 30px",
@@ -1079,7 +1071,24 @@ const Home = () => {
                                         }}
                                         disabled={isSigned}
                                     >
-                                        {isSigned ? "Petition Signed" : "Sign Petition"}
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                gap: '10px',
+                                                alignItems: 'center',
+                                                img: { width: '30px', height: '30px', objectFit: 'contain', borderRadius: '100%' }
+                                            }}
+                                        >
+                                            <img src="/P3WebAppLogoBlack.png" alt="chainLogo" />
+                                            <Typography
+                                                sx={{
+                                                    fontSize: { xl: "25px", xs: "20px" },
+                                                    fontWeight: '500',
+                                                    textTransform: "none",
+                                                    letterSpacing: '0px',
+                                                }}
+                                            >{isSigned ? "Petition Signed" : "Sign Petition"}</Typography>
+                                        </Box>
                                     </Button>
                                     {/* <Box
                                         sx={{
@@ -1137,7 +1146,24 @@ const Home = () => {
                                             ":hover": { background: "#5CD7DD" }
                                         }}
                                     >
-                                        Share Petition
+                                        <Box
+                                            sx={{
+                                                display: 'flex',
+                                                gap: '10px',
+                                                alignItems: 'center',
+                                                img: { width: '30px', height: '30px', objectFit: 'contain', borderRadius: '100%' }
+                                            }}
+                                        >
+                                            <Share />
+                                            <Typography
+                                                sx={{
+                                                    fontSize: { xl: "25px", xs: "20px" },
+                                                    fontWeight: '500',
+                                                    textTransform: "none",
+                                                    letterSpacing: '0px',
+                                                }}
+                                            >Share Petition</Typography>
+                                        </Box>
                                     </Button>
                                     {/* <Box
                                         sx={{
@@ -1174,10 +1200,16 @@ const Home = () => {
                                     </Box> */}
                                 </Box>
                             </Box>
-
-
                         </Box>
-                        <video src={BannerVideo} loop autoPlay controls />
+                        <Box
+                            sx={{
+                                width: { md: "50%", xs: "100%" },
+                                display: 'flex',
+                                flexDirection: 'column'
+                            }}
+                        >
+                            <video src={BannerVideo} loop autoPlay controls />
+                        </Box>
                     </Box>
                     <Box
                         sx={{
@@ -1455,8 +1487,6 @@ const Home = () => {
                                     // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                     backgroundColor: '#ffffff',
                                     color: "#000",
-                                    fontSize: { xl: "25px", xs: "20px" },
-                                    fontWeight: '500',
                                     textTransform: "none",
                                     borderRadius: "20px",
                                     padding: "10px 30px",
@@ -1466,7 +1496,24 @@ const Home = () => {
                                 }}
                                 disabled={isSigned}
                             >
-                                {isSigned ? "Petition Signed" : "Sign Petition"}
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        gap: '10px',
+                                        alignItems: 'center',
+                                        img: { width: '30px', height: '30px', objectFit: 'contain', borderRadius: '100%' }
+                                    }}
+                                >
+                                    <img src="/P3WebAppLogoBlack.png" alt="chainLogo" />
+                                    <Typography
+                                        sx={{
+                                            fontSize: { xl: "25px", xs: "20px" },
+                                            fontWeight: '500',
+                                            textTransform: "none",
+                                            letterSpacing: '0px',
+                                        }}
+                                    >{isSigned ? "Petition Signed" : "Sign Petition"}</Typography>
+                                </Box>
                             </Button>
                         </Box>
                     </Box>
@@ -1484,15 +1531,14 @@ const Home = () => {
                             onClick={(e) => setSelectedTab("signers")}
                             sx={{
                                 height: '40px',
-                                width: { md: '200px', xs: '100px' },
                                 background: 'transparent',
                                 color: `${selectedTab == "signers" ? "#ffffff" : "#FFFFFF"}`,
                                 borderTopLeftRadius: "20px",
                                 borderTopRightRadius: "20px",
-                                fontSize: "20px",
+                                fontSize: { md: "20px", xs: '16px' },
                                 fontWeight: '500',
-                                padding: "5px 20px",
-                                textShadow: `${selectedTab == "signers" ? "2px -2px 4px rgba(126, 249, 255, 0.5)" : ""}`
+                                padding: { md: "5px 20px", xs: '5px' },
+                                textShadow: `${selectedTab == "signers" ? "0px 0px 5px #7DF9FF" : ""}`
                             }}
                         >
                             Signers
@@ -1501,15 +1547,14 @@ const Home = () => {
                             onClick={(e) => setSelectedTab("comments")}
                             sx={{
                                 height: '40px',
-                                width: { md: '200px', xs: '100px' },
                                 background: 'transparent',
                                 color: `${selectedTab == "comments" ? "#ffffff" : "#FFFFFF"}`,
                                 borderTopLeftRadius: "20px",
                                 borderTopRightRadius: "20px",
-                                fontSize: "20px",
+                                fontSize: { md: "20px", xs: '16px' },
                                 fontWeight: '500',
-                                padding: "5px 20px",
-                                textShadow: `${selectedTab == "comments" ? "2px -2px 4px rgba(126, 249, 255, 0.5)" : ""}`
+                                padding: { md: "5px 20px", xs: '5px' },
+                                textShadow: `${selectedTab == "comments" ? "0px 0px 5px #7DF9FF" : ""}`
                             }}
                         >
                             Comments
