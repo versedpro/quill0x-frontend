@@ -57,7 +57,7 @@ const TwitterLogin = () => {
                     alignItems: 'center',
                 }}
             >
-                {/* <img src="./logo192.png" alt="" /> */}
+                {/* <img src="./usdebt.png" alt="" /> */}
                 <Typography
                     sx={{
                         fontSize: { xs: "36px", md: "40px" },

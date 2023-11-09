@@ -329,7 +329,7 @@ const Leaderboard = () => {
                                             img: { width: '100%', height: '100%' }
                                         }}
                                     >
-                                        <img src="/logo192.png" alt="uncleSam" />
+                                        <img src="/usdebt.png" alt="uncleSam" />
                                     </Box>
                                     <Box
                                         sx={{
@@ -354,7 +354,7 @@ const Leaderboard = () => {
                                         >
                                             2
                                         </Typography>
-                                        {/* <img src="/logo192.png" alt="uncleSam" /> */}
+                                        {/* <img src="/usdebt.png" alt="uncleSam" /> */}
                                     </Box>
                                     <Box
                                         sx={{
@@ -379,7 +379,7 @@ const Leaderboard = () => {
                                         >
                                             3
                                         </Typography>
-                                        {/* <img src="/logo192.png" alt="uncleSam" /> */}
+                                        {/* <img src="/usdebt.png" alt="uncleSam" /> */}
                                     </Box>
                                     <Box
                                         sx={{
@@ -404,7 +404,7 @@ const Leaderboard = () => {
                                         >
                                             4
                                         </Typography>
-                                        {/* <img src="/logo192.png" alt="uncleSam" /> */}
+                                        {/* <img src="/usdebt.png" alt="uncleSam" /> */}
                                     </Box>
                                     <Box
                                         sx={{
@@ -429,7 +429,7 @@ const Leaderboard = () => {
                                         >
                                             5
                                         </Typography>
-                                        {/* <img src="/logo192.png" alt="uncleSam" /> */}
+                                        {/* <img src="/usdebt.png" alt="uncleSam" /> */}
                                     </Box>
                                 </Box>
                                 <Box

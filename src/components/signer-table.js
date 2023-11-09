@@ -100,7 +100,7 @@ const SignerTable = ({ tableItems, isUsdebtSigners }) => {
                     <TableCell align="right">
                       <TokenBalance
                         balance={item.usdebtBalance}
-                        tokenIconUrl={"./logo192.png"}
+                        tokenIconUrl={"./usdebt.png"}
                       />
                     </TableCell> :
                     <></>
@@ -168,7 +168,7 @@ const SignerTable = ({ tableItems, isUsdebtSigners }) => {
                 <Box>
                   <TokenBalance
                     balance={item.usdebtBalance}
-                    tokenIconUrl={"./logo192.png"}
+                    tokenIconUrl={"./usdebt.png"}
                   />
                 </Box>
                 {/* <Box

@@ -34,68 +34,68 @@ export const themeOptions = {
   }
 };
 
-const { chains, publicClient, webSocketPublicClient } = configureChains(
-  [goerli],
-  [alchemyProvider({ apiKey: 'oad0JCDVOhPo7Lmd1RMehRhABPr4Adj9' }), publicProvider()],
-)
-
-const config = createConfig({
-  autoConnect: true,
-  connectors: [
-    new MetaMaskConnector({ chains }),
-    new CoinbaseWalletConnector({
-      chains,
-      options: {
-        appName: 'Petitions3',
-        jsonRpcUrl: 'https://eth-goerli.g.alchemy.com/v2/oad0JCDVOhPo7Lmd1RMehRhABPr4Adj9',
-      },
-    }),
-    new WalletConnectConnector({
-      chains,
-      options: {
-        projectId: '32487a201756fc4239683ac0b3568cb9',
-      },
-    }),
-    new InjectedConnector({
-      chains,
-      options: {
-        name: 'Injected',
-        shimDisconnect: true,
-      },
-    }),
-  ],
-  publicClient,
-  webSocketPublicClient,
-})
-
-// const projectId = '32487a201756fc4239683ac0b3568cb9'
-// const { chains, publicClient } = configureChains(
+// const { chains, publicClient, webSocketPublicClient } = configureChains(
 //   [goerli],
-//   [walletConnectProvider({ projectId }), publicProvider()]
+//   [alchemyProvider({ apiKey: 'oad0JCDVOhPo7Lmd1RMehRhABPr4Adj9' }), publicProvider()],
 // )
-// const metadata = {
-//   name: 'Petitions3',
-//   description: 'Petitions3',
-//   url: 'https://petitions3.com',
-//   icons: ['https://avatars.githubusercontent.com/u/37784886']
-// }
-// const wagmiConfig = createConfig({
+
+// const config = createConfig({
 //   autoConnect: true,
 //   connectors: [
-//     new EIP6963Connector({ chains }),
-//     new CoinbaseWalletConnector({ chains, options: { appName: metadata.name } }),
-//     new WalletConnectConnector({ chains, options: { projectId, showQrModal: false, metadata } }),
+//     new MetaMaskConnector({ chains }),
+//     new CoinbaseWalletConnector({
+//       chains,
+//       options: {
+//         appName: 'Petitions3',
+//         jsonRpcUrl: 'https://eth-goerli.g.alchemy.com/v2/oad0JCDVOhPo7Lmd1RMehRhABPr4Adj9',
+//       },
+//     }),
+//     new WalletConnectConnector({
+//       chains,
+//       options: {
+//         projectId: '32487a201756fc4239683ac0b3568cb9',
+//       },
+//     }),
+//     new InjectedConnector({
+//       chains,
+//       options: {
+//         name: 'Injected',
+//         shimDisconnect: true,
+//       },
+//     }),
 //   ],
-//   publicClient
+//   publicClient,
+//   webSocketPublicClient,
 // })
-// createWeb3Modal({
-//   wagmiConfig, projectId, chains
-// })
+
+const projectId = '32487a201756fc4239683ac0b3568cb9'
+const { chains, publicClient } = configureChains(
+  [goerli, mainnet, base, baseGoerli],
+  [walletConnectProvider({ projectId }), publicProvider()]
+)
+const metadata = {
+  name: 'Petitions3',
+  description: 'Petitions3',
+  url: 'https://petitions3.com',
+  icons: ['https://avatars.githubusercontent.com/u/37784886']
+}
+const wagmiConfig = createConfig({
+  autoConnect: true,
+  connectors: [
+    new EIP6963Connector({ chains }),
+    new CoinbaseWalletConnector({ chains, options: { appName: metadata.name } }),
+    new WalletConnectConnector({ chains, options: { projectId, showQrModal: false, metadata } }),
+  ],
+  publicClient
+})
+createWeb3Modal({
+  wagmiConfig, projectId, chains
+})
 
 function App() {
   return (
     <>
-      <WagmiConfig config={config}>
+      <WagmiConfig config={wagmiConfig}>
         <ThemeProvider theme={createTheme(themeOptions)}>
           <Footer />
           <Navbar />

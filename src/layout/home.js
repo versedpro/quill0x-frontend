@@ -7,6 +7,8 @@ import { Box, Container, Typography, Button, TextField, Input } from "@mui/mater
 import { Link, Close, AccountCircle, Share } from "@mui/icons-material";
 import { FacebookIcon, TwitterIcon, EmailIcon } from 'react-share';
 
+import DarkX from "../assets/images/social/dark-x.png";
+
 import { useAccount } from 'wagmi';
 
 import { petition_abi } from "../petition_abi";
@@ -78,7 +80,9 @@ const Home = () => {
     const [usdebtPrice, setUsdebtPrice] = useState(0);
     const [usdebtBalanceValue, setUsdebtBalanceValue] = useState(0);
     const [usdebtBalance, setUsdebtBalance] = useState("");
+    const [ethBalanceValue, setEthBalanceValue] = useState(0);
     const [usdebtTotalSupply, setUsdebtTotalSupply] = useState("");
+    const [ethTotalSupply, setEthTotalSupply] = useState("");
 
     const [DebtClock, setDebtClock] = useState('');
     const [DebtClockOptimized, setDebtClockOptimized] = useState('');
@@ -104,6 +108,8 @@ const Home = () => {
     const [totalUsdebtValue, setTotalUsdebtValue] = useState(0);
 
     const [showPetitionToDialog, setShowPetitionToDialog] = useState(false);
+    const [showSigningToken, setShowSigningToken] = useState(false);
+    const [showCommentExplanation, setShowCommentExplanation] = useState(false);
 
     const client = new ApolloClient({
         uri: SUBGRAPH_API_URL,
@@ -255,10 +261,11 @@ const Home = () => {
                 }
 
                 if (address) {
+
                     const tmpAddressBalance = await usdebtContract.methods.balanceOf(address).call();
 
                     const balance = Number(web3.utils.fromWei(tmpAddressBalance, 'ether'));
-
+                    console.log("usdebt balance:", balance);
                     setUsdebtBalanceValue(balance);
                     if (balance / 1000000000000 >= 1) {
                         setUsdebtBalance(`${(balance / 1000000000000).toFixed(1)}T`);
@@ -271,6 +278,12 @@ const Home = () => {
                     } else {
                         setUsdebtBalance(`${(balance).toFixed(1)}`);
                     }
+
+                    const tmpAddressEthBalance = await web3.eth.getBalance(address);
+
+                    const eth_balance = Number(web3.utils.fromWei(tmpAddressEthBalance, 'ether'));
+                    console.log("eth balance:", eth_balance);
+                    setEthBalanceValue(eth_balance);
                 }
 
                 let is_signed = false;
@@ -361,17 +374,33 @@ const Home = () => {
 
         const fetchUsdebtPrice = async () => {
             try {
-                const total_supply = Number(web3.utils.fromWei(await usdebtContract.methods.totalSupply().call(), 'ether')).toFixed(2);
-                if (total_supply / 1000000000000 >= 1) {
-                    setUsdebtTotalSupply(`${(total_supply / 1000000000000).toFixed(1)}T`);
-                } else if (total_supply / 1000000000 >= 1) {
-                    setUsdebtTotalSupply(`${(total_supply / 1000000000).toFixed(1)}B`);
-                } else if (total_supply / 1000000 >= 1) {
-                    setUsdebtTotalSupply(`${(total_supply / 1000000).toFixed(1)}M`);
-                } else if (total_supply / 1000 >= 1) {
-                    setUsdebtTotalSupply(`${(total_supply / 1000).toFixed(1)}K`);
+                const usdebt_total_supply = Number(web3.utils.fromWei(await usdebtContract.methods.totalSupply().call(), 'ether')).toFixed(2);
+                console.log("usdebt total supply:", usdebt_total_supply);
+                if (usdebt_total_supply / 1000000000000 >= 1) {
+                    setUsdebtTotalSupply(`${(usdebt_total_supply / 1000000000000).toFixed(1)}T`);
+                } else if (usdebt_total_supply / 1000000000 >= 1) {
+                    setUsdebtTotalSupply(`${(usdebt_total_supply / 1000000000).toFixed(1)}B`);
+                } else if (usdebt_total_supply / 1000000 >= 1) {
+                    setUsdebtTotalSupply(`${(usdebt_total_supply / 1000000).toFixed(1)}M`);
+                } else if (usdebt_total_supply / 1000 >= 1) {
+                    setUsdebtTotalSupply(`${(usdebt_total_supply / 1000).toFixed(1)}K`);
                 } else {
-                    setUsdebtTotalSupply(`${(total_supply).toFixed(1)}`);
+                    setUsdebtTotalSupply(`${(usdebt_total_supply).toFixed(1)}`);
+                }
+
+                const tmpEthTotalSupply = await web3.eth.getTotalSupply();
+                const eth_total_supply = Number(tmpEthTotalSupply).toFixed(2);
+                console.log("eth total supply:", eth_total_supply);
+                if (eth_total_supply / 1000000000000 >= 1) {
+                    setEthTotalSupply(`${(eth_total_supply / 1000000000000).toFixed(1)}T`);
+                } else if (eth_total_supply / 1000000000 >= 1) {
+                    setEthTotalSupply(`${(eth_total_supply / 1000000000).toFixed(1)}B`);
+                } else if (eth_total_supply / 1000000 >= 1) {
+                    setEthTotalSupply(`${(eth_total_supply / 1000000).toFixed(1)}M`);
+                } else if (eth_total_supply / 1000 >= 1) {
+                    setEthTotalSupply(`${(eth_total_supply / 1000).toFixed(1)}K`);
+                } else {
+                    setEthTotalSupply(`${(eth_total_supply).toFixed(1)}`);
                 }
 
                 await Moralis.start({
@@ -406,7 +435,7 @@ const Home = () => {
                     sx={{
                         maxWidth: "1600px!important",
                         paddingTop: "80px",
-                        paddingBottom: "50px",
+                        paddingBottom: "200px",
                         paddingRight: { md: "100px", xs: "30px" },
                         paddingLeft: { md: "100px", xs: "30px" },
                         '.MuiButton-root': {
@@ -417,7 +446,7 @@ const Home = () => {
                         },
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: '50px'
+                        gap: '30px'
                     }}
                 >
                     {/* <Box
@@ -469,7 +498,7 @@ const Home = () => {
                                         img: { width: '30px', height: '30px', objectFit: 'contain' }
                                     }}
                                 >
-                                    <img alt="" src={"./logo192.png"} />
+                                    <img alt="" src={"./usdebt.png"} />
                                     <Typography
                                         sx={{
                                             color: 'white',
@@ -504,206 +533,165 @@ const Home = () => {
                             </Box>
                         </Box>
                     </Box> */}
+
                     <Box
                         sx={{
                             display: 'flex',
-                            flexDirection: 'row',
-                            justifyContent: { md: 'end', xs: 'center' },
-                            alignItems: 'center',
-                            gap: '20px',
-                            img: { width: '30px', height: '30px', objectFit: 'contain' }
+                            flexDirection: 'column',
+                            gap: '20px'
                         }}
                     >
                         <Box
                             sx={{
+                                paddingTop: { md: '30px', xs: '10px' },
                                 display: 'flex',
                                 flexDirection: 'row',
+                                justifyContent: 'end',
+                                alignItems: 'center',
                                 gap: '10px',
-                                alignItems: 'center'
+                                img: { width: '30px', height: '30px', objectFit: 'contain' }
                             }}
                         >
-                            <img alt="" src={"./logo192.png"} />
-                            <Typography
+                            {/* <Box
+                            sx={{
+                                paddingX: '10px',
+                                display: 'flex'
+                            }}
+                        >
+
+                        </Box> */}
+                            <Box
                                 sx={{
-                                    color: 'white',
-                                    fontSize: '30px',
-                                    fontWeight: '700',
-                                    textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
+                                    display: 'flex',
+                                    flexDirection: { md: 'row', xs: 'column' },
+                                    gap: { md: '20px', xs: '10px' },
+                                    alignItems: 'end'
                                 }}
                             >
-                                USDEBT
+                                {usdebtBalanceValue > 0 ?
+                                    <Typography
+                                        sx={{
+                                            color: '#AEEA00',
+                                            fontSize: '18px',
+                                            fontFamily: "Roboto",
+                                            fontWeight: 500,
+                                            lineHeight: '24px',
+                                            textAlign: 'cetner'
+                                        }}
+                                    >
+                                        Awareness tokens detected.
+                                    </Typography> :
+                                    <Typography
+                                        sx={{
+                                            color: '#FF3B30',
+                                            fontSize: '18px',
+                                            fontFamily: "Roboto",
+                                            fontWeight: 500,
+                                            lineHeight: '24px',
+                                            textAlign: 'cetner'
+                                        }}
+                                    >
+                                        Awareness tokens not detected.
+                                    </Typography>
+                                }
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        gap: '20px',
+                                        alignItems: 'center'
+                                    }}
+                                >
+                                    {usdebtBalanceValue > 0 ?
+                                        <>
+                                            <img alt="" src={"./usdebt.png"} />
+                                            {/* <Typography
+                                                sx={{
+                                                    color: 'white',
+                                                    fontSize: '30px',
+                                                    fontWeight: '700',
+                                                    textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
+                                                }}
+                                            >
+                                                USDEBT
+                                            </Typography> */}
+                                        </> :
+                                        <></>}
+                                    {/* {ethBalanceValue > 0 ?
+                                        <>
+                                            <img alt="" src={"./eth.png"} />
+                                            <Typography
+                                                    sx={{
+                                                        color: 'white',
+                                                        fontSize: '30px',
+                                                        fontWeight: '700',
+                                                        textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
+                                                    }}
+                                                >
+                                                    ETH
+                                                </Typography>
+                                        </> :
+                                        <></>
+                                    } */}
+                                </Box>
+                            </Box>
+                        </Box>
+                        <Box
+                            sx={{
+                                height: '3px',
+                                borderRadius: '1px',
+                                backgroundColor: '#888888'
+                            }}
+                        >
+                        </Box>
+                        <Box
+                            sx={{
+                                width: "100%",
+                                display: { md: 'none', xs: 'flex' },
+                                flexDirection: 'column',
+                                video: {
+                                    border: "0.6px solid #333333",
+                                    borderRadius: "20px"
+                                },
+                            }}
+                        >
+                            {window.innerWidth <= 1000 && <video src={BannerVideo} loop autoPlay controls />}
+                        </Box>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                flexDirection: 'row',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            <Typography
+                                sx={{
+                                    width: { xs: "100%" },
+                                    fontSize: { md: "28px", xs: "24px" },
+                                    fontWeight: '700',
+                                    color: "#FFFFFF",
+                                    textAlign: { md: 'center', xs: 'start' },
+                                }}
+                            >
+                                {petitionTitle}
                             </Typography>
                         </Box>
-                        <Typography
-                            sx={{
-                                color: 'white',
-                                fontSize: '30px',
-                                fontWeight: '700',
-                                textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                            }}
-                        >
-                            {usdebtBalance}
-                        </Typography>
-                        <Typography
-                            sx={{
-                                color: 'white',
-                                fontSize: '30px',
-                                fontWeight: '700',
-                                textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                            }}
-                        >
-                            $ {(usdebtBalanceValue * usdebtPrice).toFixed(2)}
-                        </Typography>
-                    </Box>
-                    <Box
-                        sx={{
-                            height: '6px',
-                            borderRadius: '3px',
-                            backgroundColor: '#333333'
-                        }}
-                    >
                     </Box>
                     <Box
                         sx={{
                             display: 'flex',
                             flexDirection: { md: 'row', xs: 'column' },
-                            gap: '20px',
-                            video: {
-                                border: "0.6px solid #333333",
-                                borderRadius: "20px"
-                            },
+                            gap: '20px'
                         }}
                     >
                         <Box
                             sx={{
                                 width: { md: "50%", xs: "100%" },
                                 display: 'flex',
-                                flexDirection: 'column'
+                                flexDirection: 'column',
+                                justifyContent: 'space-between'
                             }}
                         >
-                            <Box
-                                sx={{
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    '.MuiButton-root': {
-                                        fontFamily: "MontserratFont"
-                                    },
-                                    '.MuiTypography-root': {
-                                        fontFamily: "MontserratFont"
-                                    },
-                                }}
-                            >
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        flexDirection: 'row',
-                                        justifyContent: 'center',
-                                        gap: '1px'
-                                    }}
-                                >
-                                    <Typography
-                                        sx={{
-                                            color: '#ba0d0d',
-                                            fontSize: { md: '60px', xs: '40px' },
-                                            fontWeight: '900',
-                                            lineHeight: '1.2'
-                                        }}
-                                    >
-                                        US
-                                    </Typography>
-                                    <Typography
-                                        sx={{
-                                            color: 'white',
-                                            fontSize: { md: '60px', xs: '40px' },
-                                            fontWeight: '900',
-                                            lineHeight: '1.2'
-                                        }}
-                                    >
-                                        DE
-                                    </Typography>
-                                    <Typography
-                                        sx={{
-                                            color: '#314E85',
-                                            fontSize: { md: '60px', xs: '40px' },
-                                            fontWeight: '900',
-                                            lineHeight: '1.2'
-                                        }}
-                                    >
-                                        BT
-                                    </Typography>
-                                </Box>
-                                <Typography
-                                    sx={{
-                                        color: 'white',
-                                        fontSize: { md: '42px', xs: '30px' },
-                                        fontWeight: '700',
-                                        textAlign: 'center',
-                                        lineHeight: '1.2'
-                                    }}
-                                >
-                                    <b>A DECENTRALIZED PETITION<br />AGAINST</b>
-                                </Typography>
-                                <Box
-                                    sx={{
-                                        position: 'relative',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        gap: '10px'
-                                    }}
-                                >
-                                    <Box
-                                        sx={{
-                                            width: '100%',
-                                            height: '5px',
-                                            backgroundColor: "#ba0d0d"
-                                        }}
-                                    ></Box>
-                                    <Typography
-                                        sx={{
-                                            color: '#ba0d0d',
-                                            fontSize: { md: '42px', xs: '30px' },
-                                            fontWeight: '700',
-                                            textAlign: 'center',
-                                            lineHeight: '1.2'
-                                        }}
-                                    >
-                                        EXCESSIVE
-                                    </Typography>
-                                    <Box
-                                        sx={{
-                                            width: '100%',
-                                            height: '5px',
-                                            backgroundColor: "#ba0d0d"
-                                        }}
-                                    ></Box>
-                                </Box>
-                                <Typography
-                                    sx={{
-                                        color: 'white',
-                                        fontSize: { md: '42px', xs: '30px' },
-                                        fontWeight: '700',
-                                        textAlign: 'center',
-                                        i: { color: "white" },
-                                        lineHeight: '1.2'
-                                    }}
-                                >
-                                    <b>U.S. NATIONAL DEBT</b>
-                                </Typography>
-                            </Box>
-                            <Typography
-                                sx={{
-                                    color: 'white',
-                                    fontSize: { md: '45px', xs: '32px' },
-                                    textAlign: 'center',
-                                    textShadow: "2px 0px 1px rgba(150, 150, 150, 0.5)",
-                                    fontFamily: 'sans-serif!important',
-                                    lineHeight: '45px',
-                                    paddingBottom: '50px'
-                                }}
-                            >
-                                {DebtClock}
-                            </Typography>
                             <Box
                                 sx={{
                                     display: 'flex',
@@ -717,7 +705,7 @@ const Home = () => {
                                         height: '10px',
                                         display: 'flex',
                                         borderRadius: '5px',
-                                        border: 'solid 1px #8f8f8f'
+                                        border: 'solid 1px #7df9ff'
                                     }}
                                 >
                                     <Box
@@ -740,21 +728,22 @@ const Home = () => {
                                         sx={{
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            gap: '20px',
                                             alignItems: 'center'
                                         }}
                                     >
                                         <Typography
                                             sx={{
-                                                color: '#ffffff',
-                                                fontSize: { md: '30px', xs: '28px' },
-                                                fontWeight: '700'
+                                                color: '#7df9ff',
+                                                fontSize: { md: '22px', xs: '18px' },
+                                                fontWeight: '500',
+                                                textShadow: "0px 0px 5px #7DF9FF",
                                             }}
                                         >{numberWithCommas(ethSignersInfo.length + usdebtSignersInfo.length)}</Typography>
                                         <Typography
                                             sx={{
-                                                color: '#8f8f8f',
-                                                fontSize: { md: '24px', xs: '20px' }
+                                                color: '#7df9ff',
+                                                fontSize: { md: '22px', xs: '16px' },
+                                                textShadow: "0px 0px 5px #7DF9FF",
                                             }}
                                         >Signatures</Typography>
                                     </Box>
@@ -762,23 +751,22 @@ const Home = () => {
                                         sx={{
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            gap: '20px',
                                             alignItems: 'center'
                                         }}
                                     >
                                         <Typography
                                             sx={{
                                                 color: '#ffffff',
-                                                fontSize: { md: '30px', xs: '28px' },
-                                                fontWeight: '700'
+                                                fontSize: { md: '22px', xs: '18px' },
+                                                fontWeight: '500'
                                             }}
                                         >{numberWithCommas(nextGoalSignature)}</Typography>
                                         <Typography
                                             sx={{
                                                 color: '#8f8f8f',
-                                                fontSize: { md: '24px', xs: '20px' }
+                                                fontSize: { md: '22px', xs: '16px' },
                                             }}
-                                        >Next Goal</Typography>
+                                        >Target Goal</Typography>
                                     </Box>
                                 </Box>
                             </Box>
@@ -796,7 +784,7 @@ const Home = () => {
                                         height: '10px',
                                         display: 'flex',
                                         borderRadius: '5px',
-                                        border: 'solid 1px #8f8f8f'
+                                        border: 'solid 1px #7df9ff'
                                     }}
                                 >
                                     <Box
@@ -819,21 +807,22 @@ const Home = () => {
                                         sx={{
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            gap: '20px',
                                             alignItems: 'center'
                                         }}
                                     >
                                         <Typography
                                             sx={{
-                                                color: '#ffffff',
-                                                fontSize: { md: '30px', xs: '28px' },
-                                                fontWeight: '700'
+                                                color: '#7df9ff',
+                                                fontSize: { md: '22px', xs: '18px' },
+                                                fontWeight: '500',
+                                                textShadow: "0px 0px 5px #7DF9FF",
                                             }}
                                         >{totalUsdebt}</Typography>
                                         <Typography
                                             sx={{
-                                                color: '#8f8f8f',
-                                                fontSize: { md: '24px', xs: '20px' }
+                                                color: '#7df9ff',
+                                                fontSize: { md: '22px', xs: '16px' },
+                                                textShadow: "0px 0px 5px #7DF9FF",
                                             }}
                                         >USDEBT Held</Typography>
                                     </Box>
@@ -841,379 +830,403 @@ const Home = () => {
                                         sx={{
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            gap: '20px',
                                             alignItems: 'center'
                                         }}
                                     >
                                         <Typography
                                             sx={{
                                                 color: '#ffffff',
-                                                fontSize: { md: '30px', xs: '28px' },
-                                                fontWeight: '700'
+                                                fontSize: { md: '22px', xs: '18px' },
+                                                fontWeight: '500'
                                             }}
                                         >{nextGoalUsdebtText}</Typography>
                                         <Typography
                                             sx={{
                                                 color: '#8f8f8f',
-                                                fontSize: { md: '24px', xs: '20px' }
+                                                fontSize: { md: '22px', xs: '16px' },
                                             }}
-                                        >Next Goal</Typography>
+                                        >Target Goal</Typography>
                                     </Box>
                                 </Box>
                             </Box>
-                            <TextField
-                                onChange={(e) => setComment(e.target.value)}
-                                value={comment}
-                                placeholder="Comment"
-                                multiline
-                                maxRows={2}
-                                sx={{
-                                    marginTop: '20px',
-                                    width: '100%',
-                                    height: '80px',
-                                    border: 'solid 1px white',
-                                    '.MuiInputBase-root': { color: 'white' },
-                                    '.MuiOutlinedInput-notchedOutline': { border: 'none' },
-                                    borderRadius: '5px'
-                                }}
-                            />
-                            <Box
-                                sx={{
-                                    marginTop: '20px',
-                                    width: '100%',
-                                    display: 'flex',
-                                    flexDirection: 'row',
-                                    gap: '20px',
-                                    justifyContent: 'end',
-                                    alignItems: 'center'
-                                }}
-                            >
-                                <Typography
-                                    sx={{
-                                        fontSize: "20px",
-                                        fontWeight: '500',
-                                        color: "#FFFFFF",
-                                    }}
-                                >
-                                    Code:
-                                </Typography>
-                                <Input
-                                    onChange={(e) => setReferral(e.target.value)}
-                                    value={referral}
-                                    placeholder="Referral Code"
-                                    sx={{
-                                        color: 'white',
-                                        width: '100%',
-                                        border: 'solid 1px white',
-                                        borderRadius: '5px',
-                                        paddingLeft: '10px',
-                                        paddingRight: '10px'
-                                    }}
-                                />
-                            </Box>
+                            {(ethBalanceValue > 0 || usdebtBalanceValue > 0) && !isSigned ?
+                                <>
+                                    <TextField
+                                        onChange={(e) => setComment(e.target.value)}
+                                        value={comment}
+                                        placeholder="Share your comments"
+                                        multiline
+                                        maxRows={2}
+                                        sx={{
+                                            marginTop: '20px',
+                                            width: '100%',
+                                            height: '80px',
+                                            border: 'solid 1px white',
+                                            '.MuiInputBase-root': { color: 'white' },
+                                            '.MuiOutlinedInput-notchedOutline': { border: 'none' },
+                                            borderRadius: '5px'
+                                        }}
+                                    />
+                                    <Box
+                                        sx={{
+                                            marginTop: '20px',
+                                            width: '100%',
+                                            display: 'flex',
+                                            flexDirection: { md: 'row', xs: 'column' },
+                                            gap: { md: '20px', xs: '10px' },
+                                            justifyContent: 'end',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        <Box
+                                            sx={{
+                                                width: { md: '70%', xs: '100%' },
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '10px'
+                                            }}
+                                        >
+                                            <Typography
+                                                sx={{
+                                                    fontSize: { md: "18px", xs: "14px" },
+                                                    fontWeight: '500',
+                                                    color: "#FFFFFF",
+                                                }}
+                                            >
+                                                Referral Code:
+                                            </Typography>
+                                            <Button
+                                                onClick={(e) => { setShowCommentExplanation(true); }}
+                                                sx={{
+                                                    fontSize: { md: "18px", xs: "14px" },
+                                                    fontWeight: '500',
+                                                    color: "#FFFFFF",
+                                                    textTransform: 'none',
+                                                    ":hover": { background: 'none' }
+                                                }}
+                                            >
+                                                (learn more...)
+                                            </Button>
+                                        </Box>
+                                        <Input
+                                            onChange={(e) => setReferral(e.target.value)}
+                                            value={referral}
+                                            placeholder="Enter Code"
+                                            sx={{
+                                                color: 'white',
+                                                width: { md: '30%', xs: '100%' },
+                                                border: 'solid 1px white',
+                                                borderRadius: '5px',
+                                                paddingLeft: '10px',
+                                                paddingRight: '10px'
+                                            }}
+                                        />
+                                    </Box>
+                                </> :
+                                <></>
+                            }
                             <Box
                                 sx={{
                                     display: { md: 'none', xs: 'flex' },
                                     flexDirection: 'column',
                                     justifyContent: 'start',
                                     alignItems: 'center',
-                                    paddingTop: '50px',
-                                    gap: '50px'
+                                    paddingTop: '20px'
                                 }}
                             >
-                                <Box
+                                <Button
+                                    onMouseOver={() => { if (!(ethBalanceValue > 0 || usdebtBalanceValue > 0)) setShowSigningToken(true) }}
+                                    onMouseOut={() => { if (!(ethBalanceValue > 0 || usdebtBalanceValue > 0)) setShowSigningToken(false) }}
+                                    onClick={(e) => { if (ethBalanceValue > 0 || usdebtBalanceValue > 0) onSignPetition() }}
                                     sx={{
-                                        width: '100%',
-                                        display: 'flex'
-                                    }}
-                                >
-                                    <Button
-                                        onClick={(e) => { onSignPetition() }}
-                                        sx={{
-                                            height: '80px',
-                                            width: '100%',
-                                            // background: 'linear-gradient(to bottom, #11203E, #314E85)',
-                                            backgroundColor: '#ffffff',
-                                            color: "#000",
-                                            borderRadius: "20px",
-                                            padding: "5px 30px",
-                                            boxShadow: 3,
-                                            ":hover": { background: "#5CD7DD" },
-                                            ":disabled": { color: "#ffffff70", background: "#ffffff70" }
-                                        }}
-                                        disabled={isSigned}
-                                    >
-                                        <Box
-                                            sx={{
-                                                display: 'flex',
-                                                gap: '10px',
-                                                alignItems: 'center',
-                                                img: { width: '40px', height: '40px', objectFit: 'contain', borderRadius: '100%' }
-                                            }}
-                                        >
-                                            <img src="/P3WebAppLogoBlack.png" alt="chainLogo" />
-                                            <Typography
-                                                sx={{
-                                                    fontSize: "27px",
-                                                    fontWeight: '500',
-                                                    textTransform: "none",
-                                                    letterSpacing: '0px',
-                                                }}
-                                            >{isSigned ? "Petition Signed" : "Sign Petition"}</Typography>
-                                        </Box>
-                                    </Button>
-                                </Box>
-                                <Box
-                                    sx={{
-                                        width: '100%',
-                                        display: 'flex'
-                                    }}
-                                >
-                                    <Button
-                                        onClick={(e) => { console.log(showShareDialog); setShowShareDialog(true) }}
-                                        sx={{
-                                            height: '80px',
-                                            width: '100%',
-                                            // background: 'linear-gradient(to bottom, #11203E, #314E85)',
-                                            backgroundColor: '#ffffff',
-                                            color: "#000",
-                                            textTransform: "none",
-                                            borderRadius: "20px",
-                                            padding: "5px 30px",
-                                            boxShadow: 3,
-                                            ":hover": { background: "#5CD7DD" }
-                                        }}
-                                    >
-                                        <Box
-                                            sx={{
-                                                display: 'flex',
-                                                gap: '10px',
-                                                alignItems: 'center',
-                                                img: { width: '40px', height: '40px', objectFit: 'contain', borderRadius: '100%' }
-                                            }}
-                                        >
-                                            <Share />
-                                            <Typography
-                                                sx={{
-                                                    fontSize: "27px",
-                                                    fontWeight: '500',
-                                                    textTransform: "none",
-                                                    letterSpacing: '0px',
-                                                }}
-                                            >Share Petition</Typography>
-                                        </Box>
-                                    </Button>
-                                </Box>
-                                {/* <Box
-                                    sx={{
+                                        position: 'relative',
                                         width: '100%',
                                         display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'center',
-                                        gap: '10px',
-                                        backgroundColor: "#111111",
-                                        paddingTop: '20px',
+                                        justifyContent: 'center',
+                                        padding: 0,
                                         paddingBottom: '20px',
-                                        borderRadius: '10px'
+                                        ':hover': { background: 'transparent' }
+                                    }}
+                                    disabled={isSigned}
+                                >
+                                    <Box
+                                        sx={{
+                                            width: '100%',
+                                            backgroundColor: '#000',
+                                            color: "#fff",
+                                            lineHeight: "32px",
+                                            textAlign: "center",
+                                            border: "2px solid #7df9ff",
+                                            borderRadius: "6px",
+                                            padding: "8px 0px",
+                                            boxShadow: "0px 2px 8px rgba(0,0,0,0.16)",
+                                            ":hover": { background: "#111111" },
+                                            ":disabled": { color: "#ffffff70", background: "#111111" },
+                                            outline: "none",
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            gap: '10px',
+                                            alignItems: 'center',
+                                            img: { width: '30px', height: '30px', objectFit: 'contain', borderRadius: '100%' }
+                                        }}
+                                    >
+                                        {ethBalanceValue > 0 || usdebtBalanceValue > 0 ?
+                                            <>
+                                                <img src="/P3WebAppLogo.png" alt="chainLogo" />
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
+                                                        fontWeight: '500',
+                                                        textTransform: "none",
+                                                        letterSpacing: '0px',
+                                                    }}
+                                                >{isSigned ? "You have signed" : "Sign"}</Typography>
+                                            </> :
+                                            <Typography
+                                                sx={{
+                                                    fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
+                                                    fontWeight: '500',
+                                                    textTransform: "none",
+                                                    letterSpacing: '0px',
+                                                }}
+                                            >Buy Awareness Token</Typography>
+                                        }
+                                    </Box>
+                                    {showSigningToken ?
+                                        <Box
+                                            sx={{
+                                                position: 'absolute',
+                                                bottom: '-90px',
+                                                left: 0,
+                                                width: '100%',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                alignItems: 'center',
+                                                gap: '10px',
+                                                padding: '10px',
+                                                borderRadius: '10px',
+                                                border: '1px solid #888888',
+                                                background: '#000000',
+                                                zIndex: 1,
+                                                a: { width: '30px', height: '30px' },
+                                                img: { width: '100%', height: '100%', objectFit: 'contain' },
+                                            }}
+                                        >
+                                            <a href="https://app.uniswap.org/#/swap?&chain=mainnet&use=v2&outputCurrency=0x00c5ca160a968f47e7272a0cfcda36428f386cb6"><img src="/usdebt.png" alt="" /></a>
+                                            <Box
+                                                sx={{
+                                                    height: '2px',
+                                                    width: '100%',
+                                                    background: '#333333'
+                                                }}
+                                            ></Box>
+                                            <a href="https://baseswap.fi/basicswap"><img src="/eth.png" alt="" /></a>
+                                        </Box> :
+                                        <></>
+                                    }
+                                </Button>
+                                <Button
+                                    onClick={(e) => { console.log(showShareDialog); setShowShareDialog(true) }}
+                                    sx={{
+                                        width: '100%',
+                                        minHeight: '50px',
+                                        backgroundColor: '#000',
+                                        color: "#fff",
+                                        fontSize: "24px",
+                                        lineHeight: "32px",
+                                        textAlign: "center",
+                                        border: "2px solid #7df9ff",
+                                        borderRadius: "6px",
+                                        padding: "8px 0px",
+                                        boxShadow: "0px 2px 8px rgba(0,0,0,0.16)",
+                                        ":hover": { background: "#111111" },
+                                        ":disabled": { color: "#ffffff70", background: "#111111" },
+                                        outline: "none"
                                     }}
                                 >
-                                    <Typography
+                                    <Box
                                         sx={{
-                                            textAlign: "center",
-                                            fontSize: { md: "28px", xs: "24px" },
-                                            fontWeight: '500',
-                                            color: "#FFFFFF",
+                                            display: 'flex',
+                                            gap: '20px',
+                                            alignItems: 'center',
+                                            img: { width: '40px', height: '40px', objectFit: 'contain', borderRadius: '100%' }
                                         }}
                                     >
-                                        USDEBT Held<br />by Signers
-                                    </Typography>
-                                    <Typography
-                                        sx={{
-                                            textAlign: "justify",
-                                            fontSize: { md: "72px", xs: "68px" },
-                                            fontWeight: '700',
-                                            color: "#FFFFFF",
-                                        }}
-                                    >
-                                        {totalUsdebt}
-                                    </Typography>
-                                </Box> */}
+                                        <Share sx={{ color: "#7df9ff" }} />
+                                        <Typography
+                                            sx={{
+                                                fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
+                                                fontWeight: '500',
+                                                textTransform: "none",
+                                                letterSpacing: '0px',
+                                            }}
+                                        >Share</Typography>
+                                    </Box>
+                                </Button>
                             </Box>
                             <Box
                                 sx={{
                                     display: { md: 'flex', xs: 'none' },
-                                    flexDirection: { md: 'row', xs: 'column' },
-                                    justifyContent: { md: 'center', xs: 'start' },
-                                    alignItems: { md: 'end', xs: 'center' },
-                                    paddingTop: '50px',
-                                    gap: '50px'
+                                    flexDirection: 'row',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'start',
+                                    paddingTop: '20px'
                                 }}
                             >
-                                <Box
+                                <Button
+                                    onMouseOver={() => { if (!(ethBalanceValue > 0 || usdebtBalanceValue > 0)) setShowSigningToken(true) }}
+                                    onMouseOut={() => { if (!(ethBalanceValue > 0 || usdebtBalanceValue > 0)) setShowSigningToken(false) }}
+                                    onClick={(e) => { if (ethBalanceValue > 0 || usdebtBalanceValue > 0) onSignPetition() }}
                                     sx={{
+                                        position: 'relative',
+                                        width: '45%',
                                         display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '50px'
+                                        justifyContent: 'center',
+                                        padding: 0,
+                                        paddingBottom: '20px',
+                                        ':hover': { background: 'transparent' }
                                     }}
+                                    disabled={isSigned}
                                 >
-                                    <Button
-                                        onClick={(e) => { onSignPetition() }}
+                                    <Box
                                         sx={{
-                                            // background: 'linear-gradient(to bottom, #11203E, #314E85)',
-                                            backgroundColor: '#ffffff',
-                                            color: "#000",
-                                            textTransform: "none",
-                                            borderRadius: "20px",
-                                            padding: "10px 30px",
-                                            boxShadow: 3,
-                                            ":hover": { background: "#5CD7DD" },
-                                            ":disabled": { color: "#ffffff70", background: "#ffffff70" }
+                                            width: '100%',
+                                            minHeight: '50px',
+                                            backgroundColor: '#000',
+                                            color: "#fff",
+                                            lineHeight: "32px",
+                                            textAlign: "center",
+                                            border: "2px solid #7df9ff",
+                                            borderRadius: "6px",
+                                            padding: "8px 0px",
+                                            boxShadow: "0px 2px 8px rgba(0,0,0,0.16)",
+                                            ":hover": { background: "#111111" },
+                                            ":disabled": { color: "#ffffff70", background: "#111111" },
+                                            outline: "none",
+                                            display: 'flex',
+                                            justifyContent: 'center',
+                                            gap: '10px',
+                                            alignItems: 'center',
+                                            img: { width: '30px', height: '30px', objectFit: 'contain', borderRadius: '100%' }
                                         }}
-                                        disabled={isSigned}
                                     >
-                                        <Box
-                                            sx={{
-                                                display: 'flex',
-                                                gap: '10px',
-                                                alignItems: 'center',
-                                                img: { width: '30px', height: '30px', objectFit: 'contain', borderRadius: '100%' }
-                                            }}
-                                        >
-                                            <img src="/P3WebAppLogoBlack.png" alt="chainLogo" />
+                                        {ethBalanceValue > 0 || usdebtBalanceValue > 0 ?
+                                            <>
+                                                <img src="/P3WebAppLogo.png" alt="chainLogo" />
+                                                <Typography
+                                                    sx={{
+                                                        fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
+                                                        fontWeight: '500',
+                                                        textTransform: "none",
+                                                        letterSpacing: '0px',
+                                                    }}
+                                                >{isSigned ? "You have signed" : "Sign"}</Typography>
+                                            </> :
                                             <Typography
                                                 sx={{
-                                                    fontSize: { xl: "25px", xs: "20px" },
+                                                    fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
                                                     fontWeight: '500',
                                                     textTransform: "none",
                                                     letterSpacing: '0px',
                                                 }}
-                                            >{isSigned ? "Petition Signed" : "Sign Petition"}</Typography>
-                                        </Box>
-                                    </Button>
-                                    {/* <Box
-                                        sx={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            gap: '10px',
-                                            backgroundColor: "#111111",
-                                            paddingTop: '20px',
-                                            paddingBottom: '20px',
-                                            borderRadius: '10px'
-                                        }}
-                                    >
-                                        <Typography
-                                            sx={{
-                                                textAlign: "center",
-                                                fontSize: { md: "28px", xs: "24px" },
-                                                fontWeight: '500',
-                                                color: "#FFFFFF",
-                                            }}
-                                        >
-                                            Number of<br />Signers
-                                        </Typography>
-                                        <Typography
-                                            sx={{
-                                                textAlign: "justify",
-                                                fontSize: { md: "72px", xs: "68px" },
-                                                fontWeight: '700',
-                                                color: "#FFFFFF",
-                                            }}
-                                        >
-                                            {ethSignersInfo.length + usdebtSignersInfo.length}
-                                        </Typography>
-                                    </Box> */}
-                                </Box>
-                                <Box
-                                    sx={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '50px'
-                                    }}
-                                >
-                                    <Button
-                                        onClick={(e) => { console.log(showShareDialog); setShowShareDialog(true) }}
-                                        sx={{
-                                            // background: 'linear-gradient(to bottom, #11203E, #314E85)',
-                                            backgroundColor: '#ffffff',
-                                            color: "#000",
-                                            fontSize: { xl: "25px", xs: "20px" },
-                                            fontWeight: '500',
-                                            textTransform: "none",
-                                            borderRadius: "20px",
-                                            padding: "10px 30px",
-                                            boxShadow: 3,
-                                            ":hover": { background: "#5CD7DD" }
-                                        }}
-                                    >
+                                            >Buy Awareness Token</Typography>
+                                        }
+                                    </Box>
+                                    {showSigningToken ?
                                         <Box
                                             sx={{
+                                                position: 'absolute',
+                                                bottom: '-90px',
+                                                left: 0,
+                                                width: '100%',
                                                 display: 'flex',
-                                                gap: '10px',
+                                                flexDirection: 'column',
                                                 alignItems: 'center',
-                                                img: { width: '30px', height: '30px', objectFit: 'contain', borderRadius: '100%' }
+                                                gap: '10px',
+                                                padding: '10px',
+                                                borderRadius: '10px',
+                                                border: '1px solid #888888',
+                                                background: '#000000',
+                                                zIndex: 1,
+                                                a: { width: '30px', height: '30px' },
+                                                img: { width: '100%', height: '100%', objectFit: 'contain' },
                                             }}
                                         >
-                                            <Share />
-                                            <Typography
+                                            <a href="https://app.uniswap.org/#/swap?&chain=mainnet&use=v2&outputCurrency=0x00c5ca160a968f47e7272a0cfcda36428f386cb6"><img src="/usdebt.png" alt="" /></a>
+                                            <Box
                                                 sx={{
-                                                    fontSize: { xl: "25px", xs: "20px" },
-                                                    fontWeight: '500',
-                                                    textTransform: "none",
-                                                    letterSpacing: '0px',
+                                                    height: '2px',
+                                                    width: '100%',
+                                                    background: '#333333'
                                                 }}
-                                            >Share Petition</Typography>
-                                        </Box>
-                                    </Button>
-                                    {/* <Box
+                                            ></Box>
+                                            <a href="https://baseswap.fi/basicswap"><img src="/eth.png" alt="" /></a>
+                                        </Box> :
+                                        <></>
+                                    }
+                                </Button>
+                                <Button
+                                    onClick={(e) => { console.log(showShareDialog); setShowShareDialog(true) }}
+                                    sx={{
+                                        width: '45%',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        padding: 0
+                                    }}
+                                >
+                                    <Box
                                         sx={{
+                                            width: '100%',
+                                            minHeight: '50px',
+                                            backgroundColor: '#000',
+                                            color: "#fff",
+                                            lineHeight: "32px",
+                                            textAlign: "center",
+                                            border: "2px solid #7df9ff",
+                                            borderRadius: "6px",
+                                            padding: "8px 0px",
+                                            boxShadow: "0px 2px 8px rgba(0,0,0,0.16)",
+                                            ":hover": { background: "#111111" },
+                                            ":disabled": { color: "#ffffff70", background: "#111111" },
+                                            outline: "none",
                                             display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
+                                            justifyContent: 'center',
                                             gap: '10px',
-                                            backgroundColor: "#111111",
-                                            paddingTop: '20px',
-                                            paddingBottom: '20px',
-                                            borderRadius: '10px'
+                                            alignItems: 'center',
+                                            img: { width: '30px', height: '30px', objectFit: 'contain', borderRadius: '100%' }
                                         }}
                                     >
+                                        <Share sx={{ color: "#7df9ff" }} />
                                         <Typography
                                             sx={{
-                                                textAlign: "center",
-                                                fontSize: { md: "28px", xs: "24px" },
+                                                fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
                                                 fontWeight: '500',
-                                                color: "#FFFFFF",
+                                                textTransform: "none",
+                                                letterSpacing: '0px',
                                             }}
-                                        >
-                                            USDEBT Held<br />by Signers
-                                        </Typography>
-                                        <Typography
-                                            sx={{
-                                                textAlign: "justify",
-                                                fontSize: { md: "72px", xs: "68px" },
-                                                fontWeight: '700',
-                                                color: "#FFFFFF",
-                                            }}
-                                        >
-                                            {totalUsdebt}
-                                        </Typography>
-                                    </Box> */}
-                                </Box>
+                                        >Share</Typography>
+                                    </Box>
+                                </Button>
                             </Box>
                         </Box>
                         <Box
                             sx={{
-                                width: { md: "50%", xs: "100%" },
+                                width: "50%",
                                 display: 'flex',
-                                flexDirection: 'column'
+                                flexDirection: 'column',
+                                video: {
+                                    border: "0.6px solid #333333",
+                                    borderRadius: "20px",
+                                    marginBottom: '20px'
+                                },
                             }}
                         >
-                            <video src={BannerVideo} loop autoPlay controls />
+                            {window.innerWidth > 1000 && <video src={BannerVideo} loop autoPlay controls />}
                         </Box>
                     </Box>
                     <Box
                         sx={{
-                            marginTop: { xs: "30px" },
+                            marginTop: { xs: "10px" },
                             display: 'flex',
                             flexDirection: 'column',
                             backgroundColor: "#111111",
@@ -1221,26 +1234,6 @@ const Home = () => {
                             borderRadius: '10px'
                         }}
                     >
-                        <Box
-                            sx={{
-                                marginTop: { xs: "20px" },
-                                display: 'flex',
-                                flexDirection: 'row',
-                                justifyContent: 'center'
-                            }}
-                        >
-                            <Typography
-                                sx={{
-                                    width: { xs: "100%" },
-                                    fontSize: { md: "22px", xs: "14px" },
-                                    fontWeight: '700',
-                                    lineHeight: { md: '40px', xs: '32px' },
-                                    color: "#FFFFFF",
-                                }}
-                            >
-                                {petitionTitle}
-                            </Typography>
-                        </Box>
                         <Box
                             sx={{
                                 marginTop: { xs: "20px" },
@@ -1293,7 +1286,7 @@ const Home = () => {
                                             color: "#FFFFFF",
                                         }}
                                     >
-                                        Started
+                                        Started by
                                     </Typography>
                                 </Box>
                                 <Box
@@ -1313,7 +1306,7 @@ const Home = () => {
                                             color: "#FFFFFF",
                                         }}
                                     >
-                                        {petitionStarted}
+                                        {petitionAddress.substring(0, 4) + "..." + petitionAddress.substring(petitionAddress.length - 4)}
                                     </Typography>
                                 </Box>
                             </Box>
@@ -1467,8 +1460,7 @@ const Home = () => {
                     <Box
                         sx={{
                             display: 'flex',
-                            flexDirection: { md: 'row', xs: 'column' },
-                            justifyContent: { md: 'center', xs: 'start' },
+                            flexDirection: 'row',
                             alignItems: { md: 'end', xs: 'center' },
                             paddingTop: '50px',
                             gap: { md: '200px', xs: '50px' }
@@ -1476,44 +1468,101 @@ const Home = () => {
                     >
                         <Box
                             sx={{
-                                width: { md: 'auto', xs: '100%' },
+                                width: { md: '50%', xs: '100%' },
                                 display: 'flex'
                             }}
                         >
                             <Button
-                                onClick={(e) => { onSignPetition() }}
+                                onMouseOver={() => { if (!(ethBalanceValue > 0 || usdebtBalanceValue > 0)) setShowSigningToken(true) }}
+                                onMouseOut={() => { if (!(ethBalanceValue > 0 || usdebtBalanceValue > 0)) setShowSigningToken(false) }}
+                                onClick={(e) => { if (ethBalanceValue > 0 || usdebtBalanceValue > 0) onSignPetition() }}
                                 sx={{
-                                    width: { md: 'auto', xs: '100%' },
-                                    // background: 'linear-gradient(to bottom, #11203E, #314E85)',
-                                    backgroundColor: '#ffffff',
-                                    color: "#000",
-                                    textTransform: "none",
-                                    borderRadius: "20px",
-                                    padding: "10px 30px",
-                                    boxShadow: 3,
-                                    ":hover": { background: "#5CD7DD" },
-                                    ":disabled": { color: "#ffffff70", background: "#ffffff70" }
+                                    position: 'relative',
+                                    width: { md: '45%', xs: '100%' },
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    padding: 0,
+                                    paddingBottom: '20px',
+                                    ':hover': { background: 'transparent' }
                                 }}
                                 disabled={isSigned}
                             >
                                 <Box
                                     sx={{
+                                        width: '100%',
+                                        minHeight: '50px',
+                                        backgroundColor: '#000',
+                                        color: "#fff",
+                                        lineHeight: "32px",
+                                        textAlign: "center",
+                                        border: "2px solid #7df9ff",
+                                        borderRadius: "6px",
+                                        padding: "8px 0px",
+                                        boxShadow: "0px 2px 8px rgba(0,0,0,0.16)",
+                                        ":hover": { background: "#111111" },
+                                        ":disabled": { color: "#ffffff70", background: "#111111" },
+                                        outline: "none",
                                         display: 'flex',
+                                        justifyContent: 'center',
                                         gap: '10px',
                                         alignItems: 'center',
                                         img: { width: '30px', height: '30px', objectFit: 'contain', borderRadius: '100%' }
                                     }}
                                 >
-                                    <img src="/P3WebAppLogoBlack.png" alt="chainLogo" />
-                                    <Typography
-                                        sx={{
-                                            fontSize: { xl: "25px", xs: "20px" },
-                                            fontWeight: '500',
-                                            textTransform: "none",
-                                            letterSpacing: '0px',
-                                        }}
-                                    >{isSigned ? "Petition Signed" : "Sign Petition"}</Typography>
+                                    {ethBalanceValue > 0 || usdebtBalanceValue > 0 ?
+                                        <>
+                                            <img src="/P3WebAppLogo.png" alt="chainLogo" />
+                                            <Typography
+                                                sx={{
+                                                    fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
+                                                    fontWeight: '500',
+                                                    textTransform: "none",
+                                                    letterSpacing: '0px',
+                                                }}
+                                            >{isSigned ? "You have signed" : "Sign"}</Typography>
+                                        </> :
+                                        <Typography
+                                            sx={{
+                                                fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
+                                                fontWeight: '500',
+                                                textTransform: "none",
+                                                letterSpacing: '0px',
+                                            }}
+                                        >Buy Awareness Token</Typography>
+                                    }
                                 </Box>
+                                {showSigningToken ?
+                                    <Box
+                                        sx={{
+                                            position: 'absolute',
+                                            bottom: '-90px',
+                                            left: 0,
+                                            width: '100%',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            gap: '10px',
+                                            padding: '10px',
+                                            borderRadius: '10px',
+                                            border: '1px solid #888888',
+                                            background: '#000000',
+                                            zIndex: 1,
+                                            a: { width: '30px', height: '30px' },
+                                            img: { width: '100%', height: '100%', objectFit: 'contain' },
+                                        }}
+                                    >
+                                        <a href="https://app.uniswap.org/#/swap?&chain=mainnet&use=v2&outputCurrency=0x00c5ca160a968f47e7272a0cfcda36428f386cb6"><img src="/usdebt.png" alt="" /></a>
+                                        <Box
+                                            sx={{
+                                                height: '2px',
+                                                width: '100%',
+                                                background: '#333333'
+                                            }}
+                                        ></Box>
+                                        <a href="https://baseswap.fi/basicswap"><img src="/eth.png" alt="" /></a>
+                                    </Box> :
+                                    <></>
+                                }
                             </Button>
                         </Box>
                     </Box>
@@ -1575,53 +1624,8 @@ const Home = () => {
                             tableItems={comments}
                         />
                     }
-                    {/* <Box
-                        sx={{
-                            marginTop: "30px",
-                            display: 'flex',
-                            flexDirection: 'column',
-                            gap: '50px'
-                        }}
-                    >
-                        {
-                            comments.map((comment) => {
-                                return (
-                                    <Box
-                                        sx={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: '10px',
-                                            backgroundColor: "#111111",
-                                            padding: '20px',
-                                            borderRadius: '10px'
-                                        }}
-                                    >
-                                        <Typography
-                                            sx={{
-                                                fontSize: { md: "24px", xs: "20px" },
-                                                fontWeight: '500',
-                                                color: "#FFFFFF"
-                                            }}
-                                        >
-                                            {comment.comment}
-                                        </Typography>
-                                        <Typography
-                                            sx={{
-                                                textAlign: 'right',
-                                                fontSize: { md: "14px", xs: "12px" },
-                                                fontWeight: '500',
-                                                color: "#FFFFFF"
-                                            }}
-                                        >
-                                            {comment.signer.substring(0, 4) + "..." + comment.signer.substring(comment.signer.length - 4)}
-                                        </Typography>
-                                    </Box>
-                                )
-                            })
-                        }
-                    </Box> */}
                 </Container >
-            </Box>
+            </Box >
             {showShareDialog ?
                 <Box
                     sx={{
@@ -1635,17 +1639,25 @@ const Home = () => {
                         flexDirection: 'row',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        zIndex: '100'
-                    }}
+                        zIndex: '100',
+                        '.MuiButton-root': {
+                            fontFamily: "RobotoMonoFont"
+                        },
+                        '.MuiTypography-root': {
+                            fontFamily: "RobotoMonoFont"
+                        },
+                    }
+                    }
                 >
                     <Box
                         sx={{
                             position: 'relative',
-                            backgroundColor: 'black',
+                            backgroundColor: '#333333',
+                            backdropFilter: 'blur(10px)',
                             borderRadius: '30px',
-                            boxShadow: "2px 0px 1px rgba(150, 150, 150, 0.5)",
-                            padding: '15px',
-                            width: '400px',
+                            border: 'solid 2px #888888',
+                            padding: '30px',
+                            width: { md: '35%', xs: '90%' },
                             display: 'flex',
                             flexDirection: 'column',
                             gap: '20px'
@@ -1664,8 +1676,8 @@ const Home = () => {
                         />
                         <Typography
                             sx={{
-                                textAlign: "justify",
-                                fontSize: "28px",
+                                textAlign: "center",
+                                fontSize: { md: "28px", xs: "24px" },
                                 fontWeight: '500',
                                 color: "#FFFFFF",
                             }}
@@ -1674,7 +1686,7 @@ const Home = () => {
                         </Typography>
                         <Typography
                             sx={{
-                                textAlign: "justify",
+                                textAlign: "center",
                                 fontSize: "16px",
                                 color: "#FFFFFF",
                             }}
@@ -1683,13 +1695,13 @@ const Home = () => {
                         </Typography>
                         <Button
                             sx={{
-                                background: "#ba0d0d",
+                                background: "#00000030",
                                 color: "#FFFFFF",
                                 fontSize: "16px",
                                 textTransform: "none",
-                                border: "2px solid white",
+                                textShadow: "0px 0px 5px #7DF9FF",
+                                border: "2px solid #888888",
                                 borderRadius: "10px",
-                                ":hover": { background: "#D32F28" },
                                 display: 'flex',
                                 flexDirection: 'row',
                                 gap: '10px',
@@ -1704,18 +1716,19 @@ const Home = () => {
                         <Box
                             sx={{
                                 display: 'flex',
-                                flexDirection: 'row',
-                                justifyContent: 'space-between'
+                                flexDirection: { md: 'row', xs: 'column' },
+                                justifyContent: { md: 'space-between', xs: 'start' },
+                                gap: '5px'
                             }}
                         >
                             <Box
                                 sx={{
-                                    width: "32%",
-                                    background: "#8f8f8f",
+                                    width: { md: "32%", xs: "100%" },
+                                    background: "#00000030",
+                                    border: "2px solid #888888",
                                     color: "#FFFFFF",
                                     fontSize: "16px",
                                     textTransform: "none",
-                                    border: "2px solid white",
                                     borderRadius: "10px",
                                     button: { width: '100%', height: '100%' },
                                     paddingTop: '5px',
@@ -1728,6 +1741,10 @@ const Home = () => {
                                         width: '100%',
                                         height: '100%',
                                         display: 'flex',
+                                        color: "#FFFFFF",
+                                        fontSize: "14px",
+                                        textTransform: "none",
+                                        textShadow: "0px 0px 5px #7DF9FF",
                                         flexDirection: 'row',
                                         justifyContent: 'center',
                                         alignItems: 'center',
@@ -1740,12 +1757,12 @@ const Home = () => {
                             </Box>
                             <Box
                                 sx={{
-                                    width: "32%",
-                                    background: "#8f8f8f",
+                                    width: { md: "32%", xs: "100%" },
+                                    background: "#00000030",
+                                    border: "2px solid #888888",
                                     color: "#FFFFFF",
                                     fontSize: "16px",
                                     textTransform: "none",
-                                    border: "2px solid white",
                                     borderRadius: "10px",
                                     button: { width: '100%', height: '100%' },
                                     paddingTop: '5px',
@@ -1758,24 +1775,30 @@ const Home = () => {
                                         width: '100%',
                                         height: '100%',
                                         display: 'flex',
+                                        color: "#FFFFFF",
+                                        fontSize: "14px",
+                                        textTransform: "none",
+                                        textShadow: "0px 0px 5px #7DF9FF",
                                         flexDirection: 'row',
                                         justifyContent: 'center',
                                         alignItems: 'center',
-                                        gap: '5px'
+                                        gap: '5px',
+                                        img: { width: '24px', height: '24px' }
                                     }}
                                 >
-                                    <TwitterIcon size={24} round />
+                                    {/* <TwitterIcon size={24} round /> */}
+                                    <img src={DarkX} alt="twitter_link" />
                                     <b>Twitter</b>
                                 </Button>
                             </Box>
                             <Box
                                 sx={{
-                                    width: "32%",
-                                    background: "#8f8f8f",
+                                    width: { md: "32%", xs: "100%" },
+                                    background: "#00000030",
+                                    border: "2px solid #888888",
                                     color: "#FFFFFF",
                                     fontSize: "16px",
                                     textTransform: "none",
-                                    border: "2px solid white",
                                     borderRadius: "10px",
                                     button: { width: '100%', height: '100%' },
                                     paddingTop: '5px',
@@ -1788,6 +1811,10 @@ const Home = () => {
                                         width: '100%',
                                         height: '100%',
                                         display: 'flex',
+                                        color: "#FFFFFF",
+                                        fontSize: "14px",
+                                        textTransform: "none",
+                                        textShadow: "0px 0px 5px #7DF9FF",
                                         flexDirection: 'row',
                                         justifyContent: 'center',
                                         alignItems: 'center',
@@ -1800,7 +1827,7 @@ const Home = () => {
                             </Box>
                         </Box>
                     </Box>
-                </Box> :
+                </Box > :
                 <></>}
             {showPetitionToDialog ?
                 <Box
@@ -1815,7 +1842,13 @@ const Home = () => {
                         flexDirection: 'row',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        zIndex: '100'
+                        zIndex: '100',
+                        '.MuiButton-root': {
+                            fontFamily: "RobotoMonoFont"
+                        },
+                        '.MuiTypography-root': {
+                            fontFamily: "RobotoMonoFont"
+                        },
                     }}
                 >
                     <Box
@@ -1824,7 +1857,7 @@ const Home = () => {
                             borderRadius: '30px',
                             boxShadow: "2px 0px 1px rgba(150, 150, 150, 0.5)",
                             padding: '20px',
-                            width: '400px',
+                            width: { md: '35%', xs: '90%' },
                             display: 'flex',
                             flexDirection: 'column',
                             gap: '20px'
@@ -1915,6 +1948,76 @@ const Home = () => {
                 </Box> :
                 <></>
             }
+            {showCommentExplanation ?
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backdropFilter: "blur(5px)",
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: '100',
+                        '.MuiButton-root': {
+                            fontFamily: "RobotoMonoFont"
+                        },
+                        '.MuiTypography-root': {
+                            fontFamily: "RobotoMonoFont"
+                        },
+                    }
+                    }
+                >
+                    <Box
+                        sx={{
+                            position: 'relative',
+                            backgroundColor: '#333333',
+                            backdropFilter: 'blur(10px)',
+                            borderRadius: '30px',
+                            border: 'solid 2px #888888',
+                            padding: '30px',
+                            width: { md: '35%', xs: '90%' },
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '20px'
+                        }}
+                    >
+                        <Close
+                            onClick={(e) => setShowCommentExplanation(false)}
+                            sx={{
+                                position: 'absolute',
+                                top: '10px',
+                                right: '10px',
+                                color: '#8f8f8f',
+                                ':hover': { color: 'white' },
+                                cursor: 'pointer'
+                            }}
+                        />
+                        <Typography
+                            sx={{
+                                textAlign: "center",
+                                fontSize: { md: "28px", xs: "24px" },
+                                fontWeight: '500',
+                                color: "#FFFFFF",
+                            }}
+                        >
+                            About Comment
+                        </Typography>
+                        <Typography
+                            sx={{
+                                textAlign: "center",
+                                fontSize: "16px",
+                                color: "#FFFFFF",
+                            }}
+                        >
+                            Spread awareness on the U. S. National Crisis by sharing the petition in as many places as possible.
+                        </Typography>
+                    </Box>
+                </Box > :
+                <></>}
         </>
     );
 };

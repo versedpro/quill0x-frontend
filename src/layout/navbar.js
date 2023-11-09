@@ -8,6 +8,7 @@ import queryString from 'query-string';
 
 import { mainnet, goerli, base, baseGoerli } from 'viem/chains';
 import { useAccount, useChainId, useConnect, useDisconnect, useEnsName } from 'wagmi';
+import { useWeb3Modal } from '@web3modal/wagmi/react'
 
 import axios from 'axios';
 
@@ -86,6 +87,8 @@ function ConnectTwitterButton({ twitterName, showMobileMenu, setShowMobileMenu, 
 
 function ConnectWalletButton({ showMobileMenu, setShowMobileMenu, setShowWalletModal, setShowDisconnectModal }) {
 
+  const { open, close } = useWeb3Modal()
+
   const { address, isConnected } = useAccount()
   const { data: ensName } = useEnsName({ address })
   const chainId = useChainId();
@@ -96,7 +99,8 @@ function ConnectWalletButton({ showMobileMenu, setShowMobileMenu, setShowWalletM
     if (isConnected) {
       setShowDisconnectModal(true);
     } else {
-      setShowWalletModal(true);
+      // setShowWalletModal(true);
+      open();
     }
   };
 
@@ -133,6 +137,7 @@ function ConnectWalletButton({ showMobileMenu, setShowMobileMenu, setShowWalletM
             sx={{
               display: 'flex',
               gap: '10px',
+              justifyContent: 'center',
               alignItems: 'center',
               img: { width: '30px', height: '30px', objectFit: 'contain', borderRadius: '100%' }
             }}
@@ -699,12 +704,12 @@ const Navbar = () => {
           <Box
             sx={{
               position: 'relative',
-              backgroundColor: '#88888850',
+              backgroundColor: '#333333',
               backdropFilter: 'blur(10px)',
               borderRadius: '30px',
               border: 'solid 2px #888888',
               padding: '30px',
-              width: { md: '50%', xs: '90%' },
+              width: { md: '35%', xs: '90%' },
               display: 'flex',
               flexDirection: 'column',
               gap: '20px'
@@ -874,7 +879,7 @@ const Navbar = () => {
               borderRadius: '30px',
               border: 'solid 2px #888888',
               padding: '30px',
-              width: { md: '50%', xs: '90%' },
+              width: { md: '35%', xs: '90%' },
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -894,7 +899,7 @@ const Navbar = () => {
             </Typography>
             <Box
               sx={{
-                width: { md: '50%', xs: '100%' },
+                width: '100%',
                 display: 'flex',
                 flexDirection: 'row',
                 justifyContent: 'space-between'
@@ -986,7 +991,7 @@ const Navbar = () => {
               borderRadius: '30px',
               border: 'solid 2px #888888',
               padding: '30px',
-              width: { md: '50%', xs: '90%' },
+              width: { md: '35%', xs: '90%' },
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -1006,7 +1011,7 @@ const Navbar = () => {
             </Typography>
             <Box
               sx={{
-                width: { md: '50%', xs: '100%' },
+                width: '100%',
                 display: 'flex',
                 flexDirection: 'row',
                 justifyContent: 'space-between'

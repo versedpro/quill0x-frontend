@@ -203,7 +203,7 @@ const Landing = () => {
                                             img: { width: '30px', height: '30px', objectFit: 'contain' }
                                         }}
                                     >
-                                        <img alt="" src={"./logo192.png"} />
+                                        <img alt="" src={"./usdebt.png"} />
                                         <Typography
                                             sx={{
                                                 color: 'white',
@@ -672,7 +672,7 @@ const Landing = () => {
                                         img: { width: '30px', height: '30px', objectFit: 'contain' }
                                     }}
                                 >
-                                    <img alt="" src={"./logo192.png"} />
+                                    <img alt="" src={"./usdebt.png"} />
                                     <Typography
                                         sx={{
                                             color: 'white',
