@@ -14,7 +14,10 @@
   font-family: "RobotoMonoFont";
   src: url("./assets/fonts/RobotoMono.ttf") format("truetype");
 }
-
+@font-face {
+  font-family: "RobotoSlabFont";
+  src: url("./assets/fonts/RobotoSlab.ttf") format("truetype");
+}
 
 body {
   margin: 0;

@@ -1,18 +1,23 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 import BannerVideo from "../assets/default-banner.mp4";
 import SignerTable from "../components/signer-table";
 import { Box, Container, Typography, Button, TextField, Input } from "@mui/material";
-import { Link, Close, AccountCircle, Share } from "@mui/icons-material";
+import { ContentCopy, Close, AccountCircle, Share } from "@mui/icons-material";
+import { css } from '@emotion/react';
+import styled from '@emotion/styled';
+
 import { FacebookIcon, TwitterIcon, EmailIcon } from 'react-share';
 
 import DarkX from "../assets/images/social/dark-x.png";
+import LightFacebook from "../assets/images/social/light-facebook.png";
+import DarkFacebook from "../assets/images/social/dark-facebook.png";
 
-import { useAccount } from 'wagmi';
+import { useAccount, useSignMessage, useContractWrite, useChainId } from 'wagmi';
 
-import { petition_abi } from "../petition_abi";
-import { usdebt_abi } from "../usdebt_abi";
+import petitionAbi from "../abis/petition.json";
+import usdebtAbi from "../abis/usdebt.json";
 import Web3, { utils } from 'web3';
 import Moralis from 'moralis';
 
@@ -22,19 +27,27 @@ import queryString from 'query-string';
 import axios from 'axios';
 import CommentTable from "../components/comment-table";
 
+import ConfettiExplosion from 'react-confetti-explosion';
+
 const web3 = new Web3('https://eth-goerli.g.alchemy.com/v2/oad0JCDVOhPo7Lmd1RMehRhABPr4Adj9');
-// const petitionAddress = '0xe44c1915C6E537745A6a0Dd23AdDFA62649e59d0';
-// const petitionAddress = '0x228bc24aa08e37f6D45C6d4590fd9B5162dCD0a1';
-// const petitionAddress = '0xF529b5a9D55dcB22BB9406e351dC9f0a22fE916E';
-// const petitionAddress = '0x704FdcF84aBc85e6A4533e6ED3154A1640097ccB';
+
 const petitionAddress = '0x3ad9ab36fc543a43970238A28a0Cb17706898BCF';
 const usdebtAddress = '0xdDA06BCe0E209825F741F0B7049e837493D41f2B';
-const wethAddress = '0xB4FBF271143F4FBf7B91A5ded31805e42b2208d6';
 
-const petitionContract = new web3.eth.Contract(petition_abi, petitionAddress);
-const usdebtContract = new web3.eth.Contract(usdebt_abi, usdebtAddress);
+const petitionContract = new web3.eth.Contract(petitionAbi, petitionAddress);
+const usdebtContract = new web3.eth.Contract(usdebtAbi, usdebtAddress);
 
 const SUBGRAPH_API_URL = 'https://api.studio.thegraph.com/query/51715/petition_test1/version/latest';
+
+const web3Base = new Web3('https://base-goerli.g.alchemy.com/v2/3V1hmYNCN1z_Q6TOadrWE-8zyivKE7fM');
+
+const petitionAddressBase = '0x2e3DB58f65DE9b710b77d3420B2Cc5F43D727984';
+const usdebtAddressBase = '0x20e1EFC92624B5a35bd93695e0bba7E4bEFc2E43';
+
+const petitionContractBase = new web3Base.eth.Contract(petitionAbi, petitionAddressBase);
+const usdebtContractBase = new web3Base.eth.Contract(usdebtAbi, usdebtAddressBase);
+
+const SUBGRAPH_API_URL_BASE = 'https://api.studio.thegraph.com/query/51715/petition_test1_base/version/latest';
 
 const petitionQuery = `
   query {
@@ -56,18 +69,48 @@ const petitionQuery = `
           id
           address
         }
+        transactionHash
+        time
         comment
       }
     }
   }
 `
 
-const Home = () => {
+const chainLogo = {
+    1: "https://icons.llamao.fi/icons/chains/rsz_ethereum.jpg",
+    5: "https://chainlist.org/unknown-logo.png",
+    8453: "https://icons.llamao.fi/icons/chains/rsz_base.jpg",
+    84531: "https://chainlist.org/unknown-logo.png",
+}
 
-    const { address } = useAccount();
+const RotatingElement = styled(Box)(({ }) => ({
+    width: '100px',
+    height: '100px',
+    animation: `nfLoaderSpin infinite 3s linear`,
+    transformBox: "fill-box",
+  
+    "@keyframes nfLoaderSpin": {
+      from: {
+        transform: "rotateY(0deg)"
+      },
+      to: {
+        transform: "rotateY(360deg)"
+      }
+    }
+  }));
+
+const Home = () => {
 
     const [twitterName, setTwitterName] = useState('');
     const [referralCode, setReferralCode] = useState('');
+
+    const [isLoading, setIsLoading] = useState(false);
+
+    const { address } = useAccount();
+    const chainId = useChainId();
+
+    const walletRef = useRef({ address, chainId, isFirst: true, isSigned: false });
 
     const CAGR = 0.1095;
     const initialDebt = 30928910000000;
@@ -92,7 +135,7 @@ const Home = () => {
     const [referral, setReferral] = useState("");
     const [selectedTab, setSelectedTab] = useState("signers");
 
-    const [isSigned, setIsSigned] = useState(null);
+    const [isSigned, setIsSigned] = useState(false);
 
     const [petitionTitle, setPetitionTitle] = useState("");
     const [petitionSubtitle, setPetitionSubtitle] = useState("");
@@ -111,9 +154,94 @@ const Home = () => {
     const [showSigningToken, setShowSigningToken] = useState(false);
     const [showCommentExplanation, setShowCommentExplanation] = useState(false);
 
+    const [showContractInfo, setShowContractInfo] = useState("");
+
+    const [showEthSigning, setShowEthSigning] = useState(false);
+    const [isExploding, setIsExploding] = useState(false);
+
+    const { data: signature, signMessage } = useSignMessage({
+        message: `By signing this petition, you are making an impact. Your signature advocates for responsible fiscal management and innovative solutions to the U.S. National Debt Crisis.`,
+        async onSuccess(data) {
+            try {
+                if (chainId == 1 || chainId == 5) {
+                    await petitionSign({
+                        from: address,
+                        args: [usdebtAddress]
+                    })
+                } else if (chainId == 8453 || chainId == 84531) {
+                    await petitionSignBase({
+                        from: address,
+                        args: [usdebtAddressBase]
+                    })
+                }
+                
+            } catch (error) {
+                console.log('Failed signing with USDEBT:', error);
+            }
+
+        }
+    })
+
+    const { writeAsync: petitionSign } = useContractWrite({
+        address: petitionAddress,
+        abi: petitionAbi,
+        functionName: "signPetition",
+        async onSuccess(data) {
+            console.log('Sign With USDEBT Transaction success!');
+
+            await onSubmitComment();
+            await onSubmitReferral();
+
+        }
+    });
+
+    const { writeAsync: petitionSignBase } = useContractWrite({
+        address: petitionAddressBase,
+        abi: petitionAbi,
+        functionName: "signPetition",
+        async onSuccess(data) {
+            console.log('Sign With USDEBT Transaction success!');
+
+            await onSubmitComment();
+            await onSubmitReferral();
+
+        }
+    });
+
+    const { writeAsync: petitionSetComment } = useContractWrite({
+        address: petitionAddress,
+        abi: petitionAbi,
+        functionName: "setComment",
+    });
+
+    const { writeAsync: petitionSetCommentBase } = useContractWrite({
+        address: petitionAddressBase,
+        abi: petitionAbi,
+        functionName: "setComment",
+    });
+
     const client = new ApolloClient({
         uri: SUBGRAPH_API_URL,
         cache: new InMemoryCache(),
+        queryDeduplication: false,
+        defaultOptions: {
+            watchQuery: {
+                fetchPolicy: 'cache-and-network',
+                nextFetchPolicy: 'cache-and-network',
+            },
+        },
+    });
+
+    const clientBase = new ApolloClient({
+        uri: SUBGRAPH_API_URL_BASE,
+        cache: new InMemoryCache(),
+        queryDeduplication: false,
+        defaultOptions: {
+            watchQuery: {
+                fetchPolicy: 'cache-and-network',
+                nextFetchPolicy: 'cache-and-network',
+            },
+        },
     });
 
     const numberWithCommas = (x) => {
@@ -162,18 +290,18 @@ const Home = () => {
             });
             console.log("ipfs hash:", res.data.IpfsHash);
 
-            const encodeABI = petitionContract.methods.setComment(res.data.IpfsHash).encodeABI();
-            const txCount = await web3.eth.getTransactionCount(address);
-            const txParams = {
-                from: address, // Replace with your actual sender address
-                to: petitionAddress,
-                gasLimit: web3.utils.toHex(6000000),
-                gasPrice: web3.utils.toHex(1000000000),
-                nonce: web3.utils.toHex(txCount),
-                data: encodeABI
-            };
-            const receipt = await web3.eth.sendTransaction(txParams);
-            console.log('Setting Comment Transaction receipt:', receipt);
+            if (chainId == 1 || chainId == 5) {
+                await petitionSetComment({
+                    from: address,
+                    args: [res.data.IpfsHash]
+                })
+            } else if (chainId == 8453 || chainId == 84531) {
+                await petitionSetCommentBase({
+                    from: address,
+                    args: [res.data.IpfsHash]
+                })
+            }
+            console.log('Setting Comment Transaction success!');
 
         } catch (error) {
             console.error(error);
@@ -181,58 +309,32 @@ const Home = () => {
     }
 
     const onSignPetition = async () => {
-
+        setIsExploding(false);
+        
         try {
             if (address) {
-                const message = `${!twitterName ? "You won't get point if you sign petition without twitter login.\n\n" : ""} By signing, you endorse the USDEBT petition using your digital signature.\nNo tokens or funds will be transferred.\nYour voice matters.\nThank you and proceed with confidence!`;
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                console.log("accounts:", accounts);
-                const signature = await window.ethereum.request({
-                    method: 'personal_sign',
-                    params: [
-                        web3.utils.utf8ToHex(message),
-                        accounts[0]
-                    ],
-                });
-                console.log(`Signature: ${signature}`);
-
-                try {
-                    const encodeABI = petitionContract.methods.signPetition(usdebtAddress).encodeABI();
-                    const txCount = await web3.eth.getTransactionCount(address);
-                    const txParams = {
-                        from: address, // Replace with your actual sender address
-                        to: petitionAddress,
-                        gasLimit: web3.utils.toHex(6000000),
-                        gasPrice: web3.utils.toHex(1000000000),
-                        nonce: web3.utils.toHex(txCount),
-                        data: encodeABI
-                    };
-                    const receipt = await web3.eth.sendTransaction(txParams);
-                    console.log('Sign With USDEBT Transaction receipt:', receipt);
-
-                    await onSubmitComment();
-                    await onSubmitReferral();
-
-                    fetchContractData(address);
-                } catch (error) {
-                    console.log('Failed signing with USDEBT:', error);
+                if (usdebtBalanceValue > 0) {
+                    setIsLoading(true);
+                    signMessage();
+                } else if (ethBalanceValue > 0) {
+                    setShowEthSigning(true);
                 }
-
-                fetchContractData(address);
             }
         } catch (error) {
             console.error('Error:', error);
         };
     }
 
-    const fetchContractData = async (address) => {
-
+    const fetchContractData = async (address, chainId, isSigned) => {
+        console.log("fetchContractData", address, chainId, isSigned, walletRef.current.isFirst);
         try {
-
             const data = await client.query({ query: gql(petitionQuery) });
             const petition_data = data.data.petitions;
-            console.log("petition data:", petition_data);
-            if (petition_data.length != 0) {
+            console.log("petition_data:", petition_data);
+            const dataBase = await clientBase.query({ query: gql(petitionQuery) });
+            const petition_dataBase = dataBase.data.petitions;
+            console.log("petition_dataBase:", petition_dataBase);
+            if (petition_data.length != 0 && petition_dataBase.length != 0) {
                 setPetitionTitle(petition_data[0].title ? petition_data[0].title : "");
                 setPetitionSubtitle(petition_data[0].subtitle ? petition_data[0].subtitle : "");
                 setPetitionStarted(petition_data[0].started ? petition_data[0].started : "");
@@ -261,29 +363,57 @@ const Home = () => {
                 }
 
                 if (address) {
+                    if (chainId == 1 || chainId == 5) {
+                        const tmpAddressBalance = await usdebtContract.methods.balanceOf(address).call();
 
-                    const tmpAddressBalance = await usdebtContract.methods.balanceOf(address).call();
+                        const balance = Number(web3.utils.fromWei(tmpAddressBalance, 'ether'));
+                        console.log("usdebt balance:", balance);
+                        setUsdebtBalanceValue(balance);
+                        if (balance / 1000000000000 >= 1) {
+                            setUsdebtBalance(`${(balance / 1000000000000).toFixed(1)}T`);
+                        } else if (balance / 1000000000 >= 1) {
+                            setUsdebtBalance(`${(balance / 1000000000).toFixed(1)}B`);
+                        } else if (balance / 1000000 >= 1) {
+                            setUsdebtBalance(`${(balance / 1000000).toFixed(1)}M`);
+                        } else if (balance / 1000 >= 1) {
+                            setUsdebtBalance(`${(balance / 1000).toFixed(1)}K`);
+                        } else {
+                            setUsdebtBalance(`${(balance).toFixed(1)}`);
+                        }
 
-                    const balance = Number(web3.utils.fromWei(tmpAddressBalance, 'ether'));
-                    console.log("usdebt balance:", balance);
-                    setUsdebtBalanceValue(balance);
-                    if (balance / 1000000000000 >= 1) {
-                        setUsdebtBalance(`${(balance / 1000000000000).toFixed(1)}T`);
-                    } else if (balance / 1000000000 >= 1) {
-                        setUsdebtBalance(`${(balance / 1000000000).toFixed(1)}B`);
-                    } else if (balance / 1000000 >= 1) {
-                        setUsdebtBalance(`${(balance / 1000000).toFixed(1)}M`);
-                    } else if (balance / 1000 >= 1) {
-                        setUsdebtBalance(`${(balance / 1000).toFixed(1)}K`);
+                        const tmpAddressEthBalance = await web3.eth.getBalance(address);
+
+                        const eth_balance = Number(web3.utils.fromWei(tmpAddressEthBalance, 'ether'));
+                        console.log("eth balance:", eth_balance);
+                        setEthBalanceValue(eth_balance);
+                    } else if (chainId == 8453 || chainId == 84531) {
+                        const tmpAddressBalance = await usdebtContractBase.methods.balanceOf(address).call();
+
+                        const balance = Number(web3Base.utils.fromWei(tmpAddressBalance, 'ether'));
+                        console.log("usdebt balance:", balance);
+                        setUsdebtBalanceValue(balance);
+                        if (balance / 1000000000000 >= 1) {
+                            setUsdebtBalance(`${(balance / 1000000000000).toFixed(1)}T`);
+                        } else if (balance / 1000000000 >= 1) {
+                            setUsdebtBalance(`${(balance / 1000000000).toFixed(1)}B`);
+                        } else if (balance / 1000000 >= 1) {
+                            setUsdebtBalance(`${(balance / 1000000).toFixed(1)}M`);
+                        } else if (balance / 1000 >= 1) {
+                            setUsdebtBalance(`${(balance / 1000).toFixed(1)}K`);
+                        } else {
+                            setUsdebtBalance(`${(balance).toFixed(1)}`);
+                        }
+
+                        const tmpAddressEthBalance = await web3Base.eth.getBalance(address);
+
+                        const eth_balance = Number(web3Base.utils.fromWei(tmpAddressEthBalance, 'ether'));
+                        console.log("eth balance:", eth_balance);
+                        setEthBalanceValue(eth_balance);
                     } else {
-                        setUsdebtBalance(`${(balance).toFixed(1)}`);
+                        setUsdebtBalanceValue(0);
+                        setUsdebtBalance("");
+                        setEthBalanceValue(0);
                     }
-
-                    const tmpAddressEthBalance = await web3.eth.getBalance(address);
-
-                    const eth_balance = Number(web3.utils.fromWei(tmpAddressEthBalance, 'ether'));
-                    console.log("eth balance:", eth_balance);
-                    setEthBalanceValue(eth_balance);
                 }
 
                 let is_signed = false;
@@ -293,8 +423,10 @@ const Home = () => {
                 let tmpCommentURIs = [];
                 for (let i = 0; i < petition_data[0].signers.length; i++) {
 
-                    if (address && petition_data[0].signers[i].address.toLowerCase() == address.toLowerCase()) {
-                        is_signed = true;
+                    if (chainId == 1 || chainId == 5) {
+                        if (address && petition_data[0].signers[i].address.toLowerCase() == address.toLowerCase()) {
+                            is_signed = true;
+                        }
                     }
 
                     tmpCommentURIs.push({ signer: petition_data[0].signers[i].address, commentURI: petition_data[0].signers[i].comment });
@@ -310,16 +442,67 @@ const Home = () => {
                         tmpUsdebtSignersInfo.push({
                             signerAddress: petition_data[0].signers[i].address,
                             usdebtBalance: Number(web3.utils.fromWei(token_balance, 'ether')).toFixed(2),
+                            time: petition_data[0].signers[i].time,
+                            transactionHash: petition_data[0].signers[i].transactionHash,
+                            chainId,
                             // ethBalance: Number(web3.utils.fromWei(eth_balance, 'ether')).toFixed(2)
                         });
-                    } else if (petition_data[0].signers[i].token.address.toLowerCase() == wethAddress.toLowerCase()) {
+                    } else {
                         tmpEthSignersInfo.push({
                             signerAddress: petition_data[0].signers[i].address,
                             usdebtBalance: Number(web3.utils.fromWei(token_balance, 'ether')).toFixed(2),
+                            time: petition_data[0].signers[i].time,
+                            transactionHash: petition_data[0].signers[i].transactionHash,
+                            chainId,
                             // ethBalance: Number(web3.utils.fromWei(eth_balance, 'ether')).toFixed(2)
                         });
                     }
                 }
+                for (let i = 0; i < petition_dataBase[0].signers.length; i++) {
+
+                    if (chainId == 8453 || chainId == 84531) {
+                        if (address && petition_dataBase[0].signers[i].address.toLowerCase() == address.toLowerCase()) {
+                            is_signed = true;
+                        }
+                    }
+
+                    tmpCommentURIs.push({ signer: petition_dataBase[0].signers[i].address, commentURI: petition_dataBase[0].signers[i].comment });
+
+                    const token_balance = await usdebtContractBase.methods.balanceOf(petition_dataBase[0].signers[i].address).call();
+
+                    const balance = Number(web3Base.utils.fromWei(token_balance, 'ether'));
+
+                    total_usdebt += balance;
+
+                    if (petition_dataBase[0].signers[i].token.address.toLowerCase() == usdebtAddressBase.toLowerCase()) {
+                        tmpUsdebtSignersInfo.push({
+                            signerAddress: petition_dataBase[0].signers[i].address,
+                            usdebtBalance: Number(web3Base.utils.fromWei(token_balance, 'ether')).toFixed(2),
+                            time: petition_dataBase[0].signers[i].time,
+                            transactionHash: petition_dataBase[0].signers[i].transactionHash,
+                            chainId,
+                        });
+                    } else {
+                        tmpEthSignersInfo.push({
+                            signerAddress: petition_dataBase[0].signers[i].address,
+                            usdebtBalance: Number(web3Base.utils.fromWei(token_balance, 'ether')).toFixed(2),
+                            time: petition_dataBase[0].signers[i].time,
+                            transactionHash: petition_dataBase[0].signers[i].transactionHash,
+                            chainId,
+                        });
+                    }
+                }
+
+                tmpUsdebtSignersInfo.sort((a, b) => { return Number(b.time) - Number(a.time) })
+                tmpEthSignersInfo.sort((a, b) => { return Number(b.time) - Number(a.time) })
+
+                console.log("exploding", walletRef.current.isFirst, isSigned, is_signed)
+                if (!walletRef.current.isFirst && isSigned == false && is_signed == true) {
+                    setIsLoading(false);
+                    setIsExploding(true);
+                }
+
+                walletRef.current = { address, chainId, isFirst: false, isSigned: is_signed }
                 setIsSigned(is_signed);
                 setUsdebtSignersInfo(tmpUsdebtSignersInfo);
                 setEthSignersInfo(tmpEthSignersInfo);
@@ -343,7 +526,7 @@ const Home = () => {
                     if (tmpCommentURI.commentURI) {
                         const res = await axios.get(`https://gateway.pinata.cloud/ipfs/${tmpCommentURI.commentURI}`);
                         console.log(res);
-                        tmpComments.push({ signer: tmpCommentURI.signer, comment: res.data.comment });
+                        tmpComments.push({ signer: tmpCommentURI.signer, comment: res.data.comment, chainId });
                     }
                 })
                 setComments(tmpComments);
@@ -355,8 +538,20 @@ const Home = () => {
     }
 
     useEffect(() => {
-        fetchContractData(address);
-    }, [address]);
+        walletRef.current = { address, chainId, isFirst: walletRef.current.isFirst, isSigned: walletRef.current.isSigned }
+    }, [address, chainId])
+
+    useEffect(() => {
+        fetchContractData(walletRef.current.address, walletRef.current.chainId, walletRef.current.isSigned);
+        // const intervalId = setInterval(
+        //     () => {
+        //         if(!walletRef.current.isFirst) {
+        //             fetchContractData(walletRef.current.address, walletRef.current.chainId, walletRef.current.isSigned);
+        //         }
+        //     }, 3000
+        // );
+        // return () => clearInterval(intervalId);
+    }, [])
 
     useEffect(() => {
 
@@ -374,49 +569,69 @@ const Home = () => {
 
         const fetchUsdebtPrice = async () => {
             try {
-                const usdebt_total_supply = Number(web3.utils.fromWei(await usdebtContract.methods.totalSupply().call(), 'ether')).toFixed(2);
-                console.log("usdebt total supply:", usdebt_total_supply);
-                if (usdebt_total_supply / 1000000000000 >= 1) {
-                    setUsdebtTotalSupply(`${(usdebt_total_supply / 1000000000000).toFixed(1)}T`);
-                } else if (usdebt_total_supply / 1000000000 >= 1) {
-                    setUsdebtTotalSupply(`${(usdebt_total_supply / 1000000000).toFixed(1)}B`);
-                } else if (usdebt_total_supply / 1000000 >= 1) {
-                    setUsdebtTotalSupply(`${(usdebt_total_supply / 1000000).toFixed(1)}M`);
-                } else if (usdebt_total_supply / 1000 >= 1) {
-                    setUsdebtTotalSupply(`${(usdebt_total_supply / 1000).toFixed(1)}K`);
-                } else {
-                    setUsdebtTotalSupply(`${(usdebt_total_supply).toFixed(1)}`);
-                }
+                let usdebt_total_supply;
+                if (chainId == 1 || chainId == 5) {
+                    usdebt_total_supply = Number(web3.utils.fromWei(await usdebtContract.methods.totalSupply().call(), 'ether')).toFixed(2);
+                    console.log("usdebt total supply:", usdebt_total_supply);
 
-                const tmpEthTotalSupply = await web3.eth.getTotalSupply();
-                const eth_total_supply = Number(tmpEthTotalSupply).toFixed(2);
-                console.log("eth total supply:", eth_total_supply);
-                if (eth_total_supply / 1000000000000 >= 1) {
-                    setEthTotalSupply(`${(eth_total_supply / 1000000000000).toFixed(1)}T`);
-                } else if (eth_total_supply / 1000000000 >= 1) {
-                    setEthTotalSupply(`${(eth_total_supply / 1000000000).toFixed(1)}B`);
-                } else if (eth_total_supply / 1000000 >= 1) {
-                    setEthTotalSupply(`${(eth_total_supply / 1000000).toFixed(1)}M`);
-                } else if (eth_total_supply / 1000 >= 1) {
-                    setEthTotalSupply(`${(eth_total_supply / 1000).toFixed(1)}K`);
+                    if (usdebt_total_supply / 1000000000000 >= 1) {
+                        setUsdebtTotalSupply(`${(usdebt_total_supply / 1000000000000).toFixed(1)}T`);
+                    } else if (usdebt_total_supply / 1000000000 >= 1) {
+                        setUsdebtTotalSupply(`${(usdebt_total_supply / 1000000000).toFixed(1)}B`);
+                    } else if (usdebt_total_supply / 1000000 >= 1) {
+                        setUsdebtTotalSupply(`${(usdebt_total_supply / 1000000).toFixed(1)}M`);
+                    } else if (usdebt_total_supply / 1000 >= 1) {
+                        setUsdebtTotalSupply(`${(usdebt_total_supply / 1000).toFixed(1)}K`);
+                    } else {
+                        setUsdebtTotalSupply(`${(usdebt_total_supply).toFixed(1)}`);
+                    }
+                } else if (chainId == 8453 || chainId == 84531) {
+                    usdebt_total_supply = Number(web3Base.utils.fromWei(await usdebtContractBase.methods.totalSupply().call(), 'ether')).toFixed(2);
+                    console.log("usdebt total supply:", usdebt_total_supply);
+
+                    if (usdebt_total_supply / 1000000000000 >= 1) {
+                        setUsdebtTotalSupply(`${(usdebt_total_supply / 1000000000000).toFixed(1)}T`);
+                    } else if (usdebt_total_supply / 1000000000 >= 1) {
+                        setUsdebtTotalSupply(`${(usdebt_total_supply / 1000000000).toFixed(1)}B`);
+                    } else if (usdebt_total_supply / 1000000 >= 1) {
+                        setUsdebtTotalSupply(`${(usdebt_total_supply / 1000000).toFixed(1)}M`);
+                    } else if (usdebt_total_supply / 1000 >= 1) {
+                        setUsdebtTotalSupply(`${(usdebt_total_supply / 1000).toFixed(1)}K`);
+                    } else {
+                        setUsdebtTotalSupply(`${(usdebt_total_supply).toFixed(1)}`);
+                    }
                 } else {
-                    setEthTotalSupply(`${(eth_total_supply).toFixed(1)}`);
+                    setUsdebtTotalSupply("");
                 }
 
                 await Moralis.start({
                     apiKey: "Xi61BR8j5O09XdEWAtFf7m4UYSatHm3tsXIF49u1SLbmZMmbxinok879gudDlD64"
                 });
 
-                const response = await Moralis.EvmApi.token.getTokenPrice({
-                    "chain": "0x1",
-                    "address": '0x00c5CA160A968f47e7272A0CFCda36428F386CB6'
-                });
+                let response;
+                if (chainId == 1 || chainId == 5) {
+                    response = await Moralis.EvmApi.token.getTokenPrice({
+                        "chain": "0x1",
+                        "address": '0x00c5CA160A968f47e7272A0CFCda36428F386CB6'
+                    });
 
-                console.log(response.raw);
-                setUsdebtPrice(response.raw.usdPrice);
+                    console.log(response.raw);
+                    setUsdebtPrice(response.raw.usdPrice);
+                } else if (chainId == 8453 || chainId == 84531) {
+                    response = await Moralis.EvmApi.token.getTokenPrice({
+                        "chain": "0x8453",
+                        "address": '0x00c5CA160A968f47e7272A0CFCda36428F386CB6'
+                    });
+
+                    console.log(response.raw);
+                    setUsdebtPrice(response.raw.usdPrice);
+                } else {
+                    setUsdebtPrice(0);
+                }
             } catch (error) {
                 console.log(error);
             }
+
         }
         fetchUsdebtPrice();
 
@@ -533,7 +748,6 @@ const Home = () => {
                             </Box>
                         </Box>
                     </Box> */}
-
                     <Box
                         sx={{
                             display: 'flex',
@@ -549,63 +763,37 @@ const Home = () => {
                                 justifyContent: 'end',
                                 alignItems: 'center',
                                 gap: '10px',
-                                img: { width: '30px', height: '30px', objectFit: 'contain' }
+                                img: { width: { md: '30px', xs: '25px' }, height: { md: '30px', xs: '25px' }, objectFit: 'contain' }
                             }}
                         >
-                            {/* <Box
-                            sx={{
-                                paddingX: '10px',
-                                display: 'flex'
-                            }}
-                        >
-
-                        </Box> */}
                             <Box
                                 sx={{
                                     display: 'flex',
                                     flexDirection: { md: 'row', xs: 'column' },
                                     gap: { md: '20px', xs: '10px' },
-                                    alignItems: 'end'
+                                    alignItems: { md: 'center', xs: 'end' }
                                 }}
                             >
-                                {usdebtBalanceValue > 0 ?
-                                    <Typography
-                                        sx={{
-                                            color: '#AEEA00',
-                                            fontSize: '18px',
-                                            fontFamily: "Roboto",
-                                            fontWeight: 500,
-                                            lineHeight: '24px',
-                                            textAlign: 'cetner'
-                                        }}
-                                    >
-                                        Awareness tokens detected.
-                                    </Typography> :
-                                    <Typography
-                                        sx={{
-                                            color: '#FF3B30',
-                                            fontSize: '18px',
-                                            fontFamily: "Roboto",
-                                            fontWeight: 500,
-                                            lineHeight: '24px',
-                                            textAlign: 'cetner'
-                                        }}
-                                    >
-                                        Awareness tokens not detected.
-                                    </Typography>
-                                }
                                 <Box
                                     sx={{
                                         display: 'flex',
                                         flexDirection: 'row',
-                                        gap: '20px',
-                                        alignItems: 'center'
+                                        alignItems: 'center',
+                                        gap: '10px'
                                     }}
                                 >
-                                    {usdebtBalanceValue > 0 ?
-                                        <>
-                                            <img alt="" src={"./usdebt.png"} />
-                                            {/* <Typography
+                                    <Box
+                                        sx={{
+                                            display: 'flex',
+                                            flexDirection: 'row',
+                                            gap: '20px',
+                                            alignItems: 'center'
+                                        }}
+                                    >
+                                        {usdebtBalanceValue > 0 ?
+                                            <>
+                                                <img alt="" src={"./usdebt.png"} />
+                                                {/* <Typography
                                                 sx={{
                                                     color: 'white',
                                                     fontSize: '30px',
@@ -615,9 +803,9 @@ const Home = () => {
                                             >
                                                 USDEBT
                                             </Typography> */}
-                                        </> :
-                                        <></>}
-                                    {/* {ethBalanceValue > 0 ?
+                                            </> :
+                                            <></>}
+                                        {/* {ethBalanceValue > 0 ?
                                         <>
                                             <img alt="" src={"./eth.png"} />
                                             <Typography
@@ -633,7 +821,44 @@ const Home = () => {
                                         </> :
                                         <></>
                                     } */}
+                                    </Box>
+                                    {usdebtBalanceValue > 0 ?
+                                        <Typography
+                                            sx={{
+                                                color: '#8f8f8f',
+                                                fontSize: { md: '18px', xs: '16px' },
+                                                fontFamily: "RobotoSlabFont",
+                                                fontWeight: 500,
+                                                lineHeight: '24px',
+                                                textAlign: 'cetner'
+                                            }}
+                                        >
+                                            {usdebtBalance} USDEBT tokens detected.
+                                        </Typography> :
+                                        <Typography
+                                            sx={{
+                                                color: '#FF3B30',
+                                                fontSize: { md: '18px', xs: '16px' },
+                                                fontFamily: "RobotoSlabFont",
+                                                fontWeight: 500,
+                                                lineHeight: '24px',
+                                                textAlign: 'cetner'
+                                            }}
+                                        >
+                                            Awareness tokens not detected.
+                                        </Typography>
+                                    }
                                 </Box>
+                                <Typography
+                                    sx={{
+                                        color: '#fff',
+                                        fontSize: { md: '14px', xs: '12px' },
+                                        fontWeight: '500',
+                                        textTransform: "none",
+                                        letterSpacing: '0px',
+                                        cursor: 'pointer'
+                                    }}
+                                >LEARN MORE</Typography>
                             </Box>
                         </Box>
                         <Box
@@ -656,6 +881,68 @@ const Home = () => {
                             }}
                         >
                             {window.innerWidth <= 1000 && <video src={BannerVideo} loop autoPlay controls />}
+                        </Box>
+                        <Box
+                            sx={{
+                                display: 'flex',
+                                justifyContent: 'end',
+                                alignItems: 'center',
+                                gap: '10px'
+                            }}
+                        >
+                            <Typography
+                                sx={{
+                                    fontSize: { md: "20px", xs: "12px" },
+                                    fontWeight: '500',
+                                    color: "#FFFFFF"
+                                }}
+                            >
+                                Deployed on
+                            </Typography>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    img: { width: { md: '30px', xs: '20px' }, height: { md: '30px', xs: '20px' }, objectFit: 'contain', borderRadius: '100%' }
+                                }}
+                            >
+                                <Typography
+                                    onClick={(e) => { setShowContractInfo("Ethereum") }}
+                                    sx={{
+                                        fontSize: { md: "20px", xs: "12px" },
+                                        fontWeight: '500',
+                                        color: "#FFFFFF",
+                                        textDecoration: 'underline',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Ethereum
+                                </Typography>
+                                <img src={chainLogo[1]} alt="chainLogo" />
+                            </Box>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    img: { width: { md: '30px', xs: '20px' }, height: { md: '30px', xs: '20px' }, objectFit: 'contain', borderRadius: '100%' }
+                                }}
+                            >
+                                <Typography
+                                    onClick={(e) => { setShowContractInfo("Base") }}
+                                    sx={{
+                                        fontSize: { md: "20px", xs: "12px" },
+                                        fontWeight: '500',
+                                        color: "#FFFFFF",
+                                        textDecoration: 'underline',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Base
+                                </Typography>
+                                <img src={chainLogo[8453]} alt="chainLogo" />
+                            </Box>
                         </Box>
                         <Box
                             sx={{
@@ -704,7 +991,7 @@ const Home = () => {
                                         width: '100%',
                                         height: '10px',
                                         display: 'flex',
-                                        borderRadius: '5px',
+                                        borderRadius: '8px',
                                         border: 'solid 1px #7df9ff'
                                     }}
                                 >
@@ -713,7 +1000,7 @@ const Home = () => {
                                             width: `${Math.ceil((ethSignersInfo.length + usdebtSignersInfo.length) * 100.0 / nextGoalSignature)}%`,
                                             height: '100%',
                                             backgroundColor: '#ffffff',
-                                            borderRadius: '5px'
+                                            borderRadius: '8px'
                                         }}
                                     ></Box>
                                 </Box>
@@ -736,14 +1023,14 @@ const Home = () => {
                                                 color: '#7df9ff',
                                                 fontSize: { md: '22px', xs: '18px' },
                                                 fontWeight: '500',
-                                                textShadow: "0px 0px 5px #7DF9FF",
+                                                textShadow: { md: "0px 0px 3px #7DF9FF", xs: "0px 0px 1px #7DF9FF" },
                                             }}
                                         >{numberWithCommas(ethSignersInfo.length + usdebtSignersInfo.length)}</Typography>
                                         <Typography
                                             sx={{
                                                 color: '#7df9ff',
                                                 fontSize: { md: '22px', xs: '16px' },
-                                                textShadow: "0px 0px 5px #7DF9FF",
+                                                textShadow: { md: "0px 0px 3px #7DF9FF", xs: "0px 0px 1px #7DF9FF" },
                                             }}
                                         >Signatures</Typography>
                                     </Box>
@@ -783,7 +1070,7 @@ const Home = () => {
                                         width: '100%',
                                         height: '10px',
                                         display: 'flex',
-                                        borderRadius: '5px',
+                                        borderRadius: '8px',
                                         border: 'solid 1px #7df9ff'
                                     }}
                                 >
@@ -792,7 +1079,7 @@ const Home = () => {
                                             width: `${Math.ceil(totalUsdebtValue * 100.0 / nextGoalUsdebtHeld)}%`,
                                             height: '100%',
                                             backgroundColor: '#ffffff',
-                                            borderRadius: '5px'
+                                            borderRadius: '8px'
                                         }}
                                     ></Box>
                                 </Box>
@@ -815,14 +1102,14 @@ const Home = () => {
                                                 color: '#7df9ff',
                                                 fontSize: { md: '22px', xs: '18px' },
                                                 fontWeight: '500',
-                                                textShadow: "0px 0px 5px #7DF9FF",
+                                                textShadow: { md: "0px 0px 3px #7DF9FF", xs: "0px 0px 1px #7DF9FF" },
                                             }}
                                         >{totalUsdebt}</Typography>
                                         <Typography
                                             sx={{
                                                 color: '#7df9ff',
                                                 fontSize: { md: '22px', xs: '16px' },
-                                                textShadow: "0px 0px 5px #7DF9FF",
+                                                textShadow: { md: "0px 0px 3px #7DF9FF", xs: "0px 0px 1px #7DF9FF" },
                                             }}
                                         >USDEBT Held</Typography>
                                     </Box>
@@ -852,7 +1139,7 @@ const Home = () => {
                             {(ethBalanceValue > 0 || usdebtBalanceValue > 0) && !isSigned ?
                                 <>
                                     <TextField
-                                        onChange={(e) => setComment(e.target.value)}
+                                        onChange={(e) => { if (e.target.value.length < 280) { setComment(e.target.value) } }}
                                         value={comment}
                                         placeholder="Share your comments"
                                         multiline
@@ -864,7 +1151,7 @@ const Home = () => {
                                             border: 'solid 1px white',
                                             '.MuiInputBase-root': { color: 'white' },
                                             '.MuiOutlinedInput-notchedOutline': { border: 'none' },
-                                            borderRadius: '5px'
+                                            borderRadius: '8px'
                                         }}
                                     />
                                     <Box
@@ -916,7 +1203,7 @@ const Home = () => {
                                                 color: 'white',
                                                 width: { md: '30%', xs: '100%' },
                                                 border: 'solid 1px white',
-                                                borderRadius: '5px',
+                                                borderRadius: '8px',
                                                 paddingLeft: '10px',
                                                 paddingRight: '10px'
                                             }}
@@ -945,7 +1232,8 @@ const Home = () => {
                                         justifyContent: 'center',
                                         padding: 0,
                                         paddingBottom: '20px',
-                                        ':hover': { background: 'transparent' }
+                                        ':hover': { background: 'transparent' },
+                                        ':disabled': { opacity: '30%' }
                                     }}
                                     disabled={isSigned}
                                 >
@@ -957,7 +1245,7 @@ const Home = () => {
                                             lineHeight: "32px",
                                             textAlign: "center",
                                             border: "2px solid #7df9ff",
-                                            borderRadius: "6px",
+                                            borderRadius: "8px",
                                             padding: "8px 0px",
                                             boxShadow: "0px 2px 8px rgba(0,0,0,0.16)",
                                             ":hover": { background: "#111111" },
@@ -975,21 +1263,21 @@ const Home = () => {
                                                 <img src="/P3WebAppLogo.png" alt="chainLogo" />
                                                 <Typography
                                                     sx={{
-                                                        fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
+                                                        fontSize: { xl: "16px", lg: '16px', md: '14px', xl: '16px' },
                                                         fontWeight: '500',
                                                         textTransform: "none",
                                                         letterSpacing: '0px',
                                                     }}
-                                                >{isSigned ? "You have signed" : "Sign"}</Typography>
+                                                >{isSigned ? "YOU HAVE SIGNED" : "SIGN"}</Typography>
                                             </> :
                                             <Typography
                                                 sx={{
-                                                    fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
+                                                    fontSize: { xl: "16px", lg: '16px', md: '14px', xl: '16px' },
                                                     fontWeight: '500',
                                                     textTransform: "none",
                                                     letterSpacing: '0px',
                                                 }}
-                                            >Buy Awareness Token</Typography>
+                                            >BUY AWARENESS TOKEN</Typography>
                                         }
                                     </Box>
                                     {showSigningToken ?
@@ -1004,7 +1292,7 @@ const Home = () => {
                                                 alignItems: 'center',
                                                 gap: '10px',
                                                 padding: '10px',
-                                                borderRadius: '10px',
+                                                borderRadius: '8px',
                                                 border: '1px solid #888888',
                                                 background: '#000000',
                                                 zIndex: 1,
@@ -1020,7 +1308,15 @@ const Home = () => {
                                                     background: '#333333'
                                                 }}
                                             ></Box>
-                                            <a href="https://baseswap.fi/basicswap"><img src="/eth.png" alt="" /></a>
+                                            {/* <a href="https://baseswap.fi/basicswap"><img src="/eth.png" alt="" /></a> */}
+                                            <Typography
+                                                sx={{
+                                                    fontSize: { xl: "16px", lg: '16px', md: '14px', xl: '16px' },
+                                                    fontWeight: '500',
+                                                    textTransform: "none",
+                                                    letterSpacing: '0px',
+                                                }}
+                                            >LEARN MORE</Typography>
                                         </Box> :
                                         <></>
                                     }
@@ -1036,7 +1332,7 @@ const Home = () => {
                                         lineHeight: "32px",
                                         textAlign: "center",
                                         border: "2px solid #7df9ff",
-                                        borderRadius: "6px",
+                                        borderRadius: "8px",
                                         padding: "8px 0px",
                                         boxShadow: "0px 2px 8px rgba(0,0,0,0.16)",
                                         ":hover": { background: "#111111" },
@@ -1055,12 +1351,12 @@ const Home = () => {
                                         <Share sx={{ color: "#7df9ff" }} />
                                         <Typography
                                             sx={{
-                                                fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
+                                                fontSize: { xl: "16px", lg: '16px', md: '14px', xl: '16px' },
                                                 fontWeight: '500',
                                                 textTransform: "none",
                                                 letterSpacing: '0px',
                                             }}
-                                        >Share</Typography>
+                                        >SHARE AND EARN</Typography>
                                     </Box>
                                 </Button>
                             </Box>
@@ -1084,7 +1380,8 @@ const Home = () => {
                                         justifyContent: 'center',
                                         padding: 0,
                                         paddingBottom: '20px',
-                                        ':hover': { background: 'transparent' }
+                                        ':hover': { background: 'transparent' },
+                                        ':disabled': { opacity: '30%' }
                                     }}
                                     disabled={isSigned}
                                 >
@@ -1097,7 +1394,7 @@ const Home = () => {
                                             lineHeight: "32px",
                                             textAlign: "center",
                                             border: "2px solid #7df9ff",
-                                            borderRadius: "6px",
+                                            borderRadius: "8px",
                                             padding: "8px 0px",
                                             boxShadow: "0px 2px 8px rgba(0,0,0,0.16)",
                                             ":hover": { background: "#111111" },
@@ -1115,21 +1412,21 @@ const Home = () => {
                                                 <img src="/P3WebAppLogo.png" alt="chainLogo" />
                                                 <Typography
                                                     sx={{
-                                                        fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
+                                                        fontSize: { xl: "16px", lg: '16px', md: '14px', xl: '16px' },
                                                         fontWeight: '500',
                                                         textTransform: "none",
                                                         letterSpacing: '0px',
                                                     }}
-                                                >{isSigned ? "You have signed" : "Sign"}</Typography>
+                                                >{isSigned ? "YOU HAVE SIGNED" : "SIGN"}</Typography>
                                             </> :
                                             <Typography
                                                 sx={{
-                                                    fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
+                                                    fontSize: { xl: "16px", lg: '16px', md: '14px', xl: '16px' },
                                                     fontWeight: '500',
                                                     textTransform: "none",
                                                     letterSpacing: '0px',
                                                 }}
-                                            >Buy Awareness Token</Typography>
+                                            >BUY AWARENESS TOKEN</Typography>
                                         }
                                     </Box>
                                     {showSigningToken ?
@@ -1144,7 +1441,7 @@ const Home = () => {
                                                 alignItems: 'center',
                                                 gap: '10px',
                                                 padding: '10px',
-                                                borderRadius: '10px',
+                                                borderRadius: '8px',
                                                 border: '1px solid #888888',
                                                 background: '#000000',
                                                 zIndex: 1,
@@ -1160,7 +1457,15 @@ const Home = () => {
                                                     background: '#333333'
                                                 }}
                                             ></Box>
-                                            <a href="https://baseswap.fi/basicswap"><img src="/eth.png" alt="" /></a>
+                                            {/* <a href="https://baseswap.fi/basicswap"><img src="/eth.png" alt="" /></a> */}
+                                            <Typography
+                                                sx={{
+                                                    fontSize: { xl: "16px", lg: '16px', md: '14px', xl: '16px' },
+                                                    fontWeight: '500',
+                                                    textTransform: "none",
+                                                    letterSpacing: '0px',
+                                                }}
+                                            >LEARN MORE</Typography>
                                         </Box> :
                                         <></>
                                     }
@@ -1183,7 +1488,7 @@ const Home = () => {
                                             lineHeight: "32px",
                                             textAlign: "center",
                                             border: "2px solid #7df9ff",
-                                            borderRadius: "6px",
+                                            borderRadius: "8px",
                                             padding: "8px 0px",
                                             boxShadow: "0px 2px 8px rgba(0,0,0,0.16)",
                                             ":hover": { background: "#111111" },
@@ -1199,12 +1504,12 @@ const Home = () => {
                                         <Share sx={{ color: "#7df9ff" }} />
                                         <Typography
                                             sx={{
-                                                fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
+                                                fontSize: { xl: "16px", lg: '16px', md: '14px', xl: '16px' },
                                                 fontWeight: '500',
                                                 textTransform: "none",
                                                 letterSpacing: '0px',
                                             }}
-                                        >Share</Typography>
+                                        >SHARE AND EARN</Typography>
                                     </Box>
                                 </Button>
                             </Box>
@@ -1231,7 +1536,13 @@ const Home = () => {
                             flexDirection: 'column',
                             backgroundColor: "#111111",
                             padding: '20px',
-                            borderRadius: '10px'
+                            borderRadius: '8px',
+                            '.MuiButton-root': {
+                                fontFamily: "RobotoSlabFont"
+                            },
+                            '.MuiTypography-root': {
+                                fontFamily: "RobotoSlabFont"
+                            },
                         }}
                     >
                         <Box
@@ -1246,9 +1557,9 @@ const Home = () => {
                                 sx={{
                                     width: { xs: "100%" },
                                     textAlign: "justify",
-                                    fontSize: { md: "22px", xs: "14px" },
+                                    fontSize: { md: "18px", xs: "18px" },
                                     lineHeight: { md: '40px', xs: '32px' },
-                                    color: "#FFFFFF",
+                                    color: "#FFFFFF"
                                 }}
                             >
                                 {petitionSubtitle}
@@ -1281,7 +1592,7 @@ const Home = () => {
                                         sx={{
                                             width: { xs: "100%" },
                                             textAlign: "justify",
-                                            fontSize: { md: "20px", xs: "12px" },
+                                            fontSize: { md: "16px", xs: "12px" },
                                             lineHeight: { md: '40px', xs: '32px' },
                                             color: "#FFFFFF",
                                         }}
@@ -1301,12 +1612,12 @@ const Home = () => {
                                         sx={{
                                             width: { xs: "100%" },
                                             textAlign: "justify",
-                                            fontSize: { md: "20px", xs: "12px" },
+                                            fontSize: { md: "16px", xs: "12px" },
                                             lineHeight: { md: '40px', xs: '32px' },
                                             color: "#FFFFFF",
                                         }}
                                     >
-                                        {petitionAddress.substring(0, 4) + "..." + petitionAddress.substring(petitionAddress.length - 4)}
+                                        {(chainId == 1 || chainId == 5) ? petitionAddress.substring(0, 4) + "..." + petitionAddress.substring(petitionAddress.length - 4) : ((chainId == 8453 || chainId == 84531) ? petitionAddressBase.substring(0, 4) + "..." + petitionAddressBase.substring(petitionAddressBase.length - 4) : "")}
                                     </Typography>
                                 </Box>
                             </Box>
@@ -1328,7 +1639,7 @@ const Home = () => {
                                         sx={{
                                             width: { xs: "100%" },
                                             textAlign: "justify",
-                                            fontSize: { md: "20px", xs: "12px" },
+                                            fontSize: { md: "16px", xs: "12px" },
                                             lineHeight: { md: '40px', xs: '32px' },
                                             color: "#FFFFFF",
                                         }}
@@ -1346,7 +1657,7 @@ const Home = () => {
                                         <Typography
                                             sx={{
                                                 textAlign: "justify",
-                                                fontSize: { md: "20px", xs: "12px" },
+                                                fontSize: { md: "16px", xs: "12px" },
                                                 lineHeight: { md: '40px', xs: '32px' },
                                                 color: "#FFFFFF"
                                             }}
@@ -1373,7 +1684,7 @@ const Home = () => {
                                             sx={{
                                                 width: { xs: "100%" },
                                                 textAlign: "justify",
-                                                fontSize: { md: "20px", xs: "12px" },
+                                                fontSize: { md: "16px", xs: "14px" },
                                                 lineHeight: { md: '40px', xs: '32px' },
                                                 color: "#FFFFFF",
                                             }}
@@ -1401,8 +1712,8 @@ const Home = () => {
                                                     sx={{
                                                         width: { xs: "100%" },
                                                         textAlign: "justify",
-                                                        fontSize: { md: "20px", xs: "14px" },
-                                                        lineHeight: { md: '40px', xs: '32px' },
+                                                        fontSize: { md: "16px", xs: "14px" },
+                                                        lineHeight: { md: '30px', xs: '32px' },
                                                         color: "#FFFFFF",
                                                     }}
                                                 >
@@ -1419,10 +1730,10 @@ const Home = () => {
                                         justifyContent: 'start',
                                     }}
                                 >
-                                    <Box
+                                    <Typography
                                         sx={{
                                             color: "#FFFFFF",
-                                            fontSize: "22px",
+                                            fontSize: "18px",
                                             textTransform: "none",
                                             fontWeight: "400",
                                             padding: "1px 20px",
@@ -1431,7 +1742,7 @@ const Home = () => {
                                         onClick={() => { setReadMore(false) }}
                                     >
                                         {`Show Less <<`}
-                                    </Box>
+                                    </Typography>
                                 </Box>
                             </> :
                             <Box
@@ -1441,10 +1752,10 @@ const Home = () => {
                                     justifyContent: 'start',
                                 }}
                             >
-                                <Box
+                                <Typography
                                     sx={{
                                         color: "#FFFFFF",
-                                        fontSize: "22px",
+                                        fontSize: "18px",
                                         textTransform: "none",
                                         fontWeight: "400",
                                         padding: "1px 20px",
@@ -1453,7 +1764,7 @@ const Home = () => {
                                     onClick={() => { setReadMore(true) }}
                                 >
                                     {`Show More >>`}
-                                </Box>
+                                </Typography>
                             </Box>
                         )}
                     </Box>
@@ -1483,7 +1794,8 @@ const Home = () => {
                                     justifyContent: 'center',
                                     padding: 0,
                                     paddingBottom: '20px',
-                                    ':hover': { background: 'transparent' }
+                                    ':hover': { background: 'transparent' },
+                                    ':disabled': { opacity: '30%' }
                                 }}
                                 disabled={isSigned}
                             >
@@ -1496,7 +1808,7 @@ const Home = () => {
                                         lineHeight: "32px",
                                         textAlign: "center",
                                         border: "2px solid #7df9ff",
-                                        borderRadius: "6px",
+                                        borderRadius: "8px",
                                         padding: "8px 0px",
                                         boxShadow: "0px 2px 8px rgba(0,0,0,0.16)",
                                         ":hover": { background: "#111111" },
@@ -1514,21 +1826,21 @@ const Home = () => {
                                             <img src="/P3WebAppLogo.png" alt="chainLogo" />
                                             <Typography
                                                 sx={{
-                                                    fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
+                                                    fontSize: { xl: "16px", lg: '16px', md: '14px', xl: '16px' },
                                                     fontWeight: '500',
                                                     textTransform: "none",
                                                     letterSpacing: '0px',
                                                 }}
-                                            >{isSigned ? "You have signed" : "Sign"}</Typography>
+                                            >{isSigned ? "YOU HAVE SIGNED" : "SIGN"}</Typography>
                                         </> :
                                         <Typography
                                             sx={{
-                                                fontSize: { xl: "20px", lg: '20px', md: '14px', xl: '20px' },
+                                                fontSize: { xl: "16px", lg: '16px', md: '14px', xl: '16px' },
                                                 fontWeight: '500',
                                                 textTransform: "none",
                                                 letterSpacing: '0px',
                                             }}
-                                        >Buy Awareness Token</Typography>
+                                        >BUY AWARENESS TOKEN</Typography>
                                     }
                                 </Box>
                                 {showSigningToken ?
@@ -1543,7 +1855,7 @@ const Home = () => {
                                             alignItems: 'center',
                                             gap: '10px',
                                             padding: '10px',
-                                            borderRadius: '10px',
+                                            borderRadius: '8px',
                                             border: '1px solid #888888',
                                             background: '#000000',
                                             zIndex: 1,
@@ -1559,7 +1871,15 @@ const Home = () => {
                                                 background: '#333333'
                                             }}
                                         ></Box>
-                                        <a href="https://baseswap.fi/basicswap"><img src="/eth.png" alt="" /></a>
+                                        {/* <a href="https://baseswap.fi/basicswap"><img src="/eth.png" alt="" /></a> */}
+                                        <Typography
+                                            sx={{
+                                                fontSize: { xl: "16px", lg: '16px', md: '14px', xl: '16px' },
+                                                fontWeight: '500',
+                                                textTransform: "none",
+                                                letterSpacing: '0px',
+                                            }}
+                                        >LEARN MORE</Typography>
                                     </Box> :
                                     <></>
                                 }
@@ -1641,10 +1961,10 @@ const Home = () => {
                         alignItems: 'center',
                         zIndex: '100',
                         '.MuiButton-root': {
-                            fontFamily: "RobotoMonoFont"
+                            fontFamily: "RobotoSlabFont"
                         },
                         '.MuiTypography-root': {
-                            fontFamily: "RobotoMonoFont"
+                            fontFamily: "RobotoSlabFont"
                         },
                     }
                     }
@@ -1652,15 +1972,15 @@ const Home = () => {
                     <Box
                         sx={{
                             position: 'relative',
-                            backgroundColor: '#333333',
-                            backdropFilter: 'blur(10px)',
-                            borderRadius: '30px',
-                            border: 'solid 2px #888888',
+                            backgroundColor: '#1E1E1E',
+                            borderRadius: '8px',
+                            border: 'solid 2px #7DF9FF',
                             padding: '30px',
                             width: { md: '35%', xs: '90%' },
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: '20px'
+                            gap: '20px',
+                            boxShadow: '0px 2px 4px rgba(0,0,0,0.08)',
                         }}
                     >
                         <Close
@@ -1677,81 +1997,82 @@ const Home = () => {
                         <Typography
                             sx={{
                                 textAlign: "center",
-                                fontSize: { md: "28px", xs: "24px" },
+                                fontSize: { md: "24px", xs: "20px" },
                                 fontWeight: '500',
                                 color: "#FFFFFF",
                             }}
                         >
-                            Share your petition
+                            Share Your Crypto Petition
                         </Typography>
                         <Typography
                             sx={{
                                 textAlign: "center",
-                                fontSize: "16px",
+                                fontSize: { md: "18px", xs: "16px" },
                                 color: "#FFFFFF",
                             }}
                         >
-                            Spread awareness on the U. S. National Crisis by sharing the petition in as many places as possible.
+                            Spread awareness about the U.S. National Debt Crisis and earn points to qualify for <i>Quill0x Airdrops</i>.
                         </Typography>
                         <Button
                             sx={{
                                 background: "#00000030",
                                 color: "#FFFFFF",
-                                fontSize: "16px",
+                                fontSize: { md: "16px", xs: "14px" },
                                 textTransform: "none",
-                                textShadow: "0px 0px 5px #7DF9FF",
-                                border: "2px solid #888888",
-                                borderRadius: "10px",
+                                border: 'solid 2px #7DF9FF',
+                                borderRadius: "8px",
                                 display: 'flex',
                                 flexDirection: 'row',
                                 gap: '10px',
                                 paddingTop: '5px',
-                                paddingBottom: '5px'
+                                paddingBottom: '5px',
+                                fontFamily: 'RobotoMonoFont!important'
                             }}
                             onClick={(e) => { }}
                         >
-                            <Link />
-                            <b>Copy link</b>
+                            <ContentCopy sx={{ fontSize: '20px' }} />
+                            <b>COPY (CLIPBOARD)</b>
                         </Button>
                         <Box
                             sx={{
                                 display: 'flex',
                                 flexDirection: { md: 'row', xs: 'column' },
                                 justifyContent: { md: 'space-between', xs: 'start' },
-                                gap: '5px'
+                                gap: '10px'
                             }}
                         >
                             <Box
                                 sx={{
                                     width: { md: "32%", xs: "100%" },
                                     background: "#00000030",
-                                    border: "2px solid #888888",
+                                    border: 'solid 2px #7DF9FF',
                                     color: "#FFFFFF",
                                     fontSize: "16px",
                                     textTransform: "none",
-                                    borderRadius: "10px",
+                                    borderRadius: "8px",
                                     button: { width: '100%', height: '100%' },
                                     paddingTop: '5px',
                                     paddingBottom: '5px'
                                 }}
                             >
                                 <Button
-                                    onClick={(e) => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.petition3.com')}&quote=${encodeURIComponent(`Please sign the USDEBT petition.\nReferral Code: ${referralCode}`)}`, '_blank'); }}
+                                    onClick={(e) => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent('https://www.quill0x.com')}&quote=${encodeURIComponent(`The U.S. National Debt Crypto Petition is a new type of petition supercharged by USDEBT, the U.S. National Debt meme coin, and ETH, the native asset of Ethereum.\n\nSign the U.S. National Debt Crypto Petition today and join the growing Capital Quill0x community.\n\nEnter my referral code: ${referralCode} to qualify for future airdrops!`)}`, '_blank'); }}
                                     sx={{
                                         width: '100%',
                                         height: '100%',
                                         display: 'flex',
                                         color: "#FFFFFF",
-                                        fontSize: "14px",
+                                        fontSize: { md: "16px", xs: "14px" },
                                         textTransform: "none",
-                                        textShadow: "0px 0px 5px #7DF9FF",
                                         flexDirection: 'row',
                                         justifyContent: 'center',
                                         alignItems: 'center',
-                                        gap: '5px'
+                                        gap: '5px',
+                                        img: { width: '24px', height: '24px' }
                                     }}
                                 >
-                                    <FacebookIcon size={24} round />
+                                    {/* <FacebookIcon size={24} round /> */}
+                                    <img src={DarkFacebook} alt="facebook_link" />
                                     <b>Facebook</b>
                                 </Button>
                             </Box>
@@ -1759,26 +2080,25 @@ const Home = () => {
                                 sx={{
                                     width: { md: "32%", xs: "100%" },
                                     background: "#00000030",
-                                    border: "2px solid #888888",
+                                    border: 'solid 2px #7DF9FF',
                                     color: "#FFFFFF",
                                     fontSize: "16px",
                                     textTransform: "none",
-                                    borderRadius: "10px",
+                                    borderRadius: "8px",
                                     button: { width: '100%', height: '100%' },
                                     paddingTop: '5px',
                                     paddingBottom: '5px'
                                 }}
                             >
                                 <Button
-                                    onClick={(e) => { window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent('https://www.petition3.com')}&text=${encodeURIComponent(`Please sign the USDEBT petition.\nReferral Code: ${referralCode}`)}`, '_blank'); }}
+                                    onClick={(e) => { window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent('https://www.quill0x.com')}&text=${encodeURIComponent(`The U.S. National Debt Crypto Petition is a new type of petition supercharged by USDEBT, the U.S. National Debt meme coin, and ETH, the native asset of Ethereum.\n\nSign the U.S. National Debt Crypto Petition today and join the growing Capital Quill0x community.\n\nEnter my referral code: ${referralCode} to qualify for future airdrops!`)}`, '_blank'); }}
                                     sx={{
                                         width: '100%',
                                         height: '100%',
                                         display: 'flex',
                                         color: "#FFFFFF",
-                                        fontSize: "14px",
+                                        fontSize: { md: "16px", xs: "14px" },
                                         textTransform: "none",
-                                        textShadow: "0px 0px 5px #7DF9FF",
                                         flexDirection: 'row',
                                         justifyContent: 'center',
                                         alignItems: 'center',
@@ -1788,33 +2108,32 @@ const Home = () => {
                                 >
                                     {/* <TwitterIcon size={24} round /> */}
                                     <img src={DarkX} alt="twitter_link" />
-                                    <b>Twitter</b>
+                                    <b>Post on X</b>
                                 </Button>
                             </Box>
                             <Box
                                 sx={{
                                     width: { md: "32%", xs: "100%" },
                                     background: "#00000030",
-                                    border: "2px solid #888888",
+                                    border: 'solid 2px #7DF9FF',
                                     color: "#FFFFFF",
                                     fontSize: "16px",
                                     textTransform: "none",
-                                    borderRadius: "10px",
+                                    borderRadius: "8px",
                                     button: { width: '100%', height: '100%' },
                                     paddingTop: '5px',
                                     paddingBottom: '5px'
                                 }}
                             >
                                 <Button
-                                    onClick={(e) => { window.open(`mailto:?subject=${encodeURIComponent('https://www.petition3.com')}&body=${encodeURIComponent(`Please sign the USDEBT petition.\nReferral Code: ${referralCode}`)}`, '_blank'); }}
+                                    onClick={(e) => { window.open(`mailto:?subject=${encodeURIComponent('Sign the U.S. National Debt Crypto Petition!')}&body=$${encodeURIComponent(`The U.S. National Debt Crypto Petition is a new type of petition supercharged by USDEBT, the U.S. National Debt meme coin, and ETH, the native asset of Ethereum.\n\nSign the U.S. National Debt Crypto Petition today and join the growing Capital Quill0x community.\n\nEnter my referral code: ${referralCode} to qualify for future airdrops!`)}`, '_blank'); }}
                                     sx={{
                                         width: '100%',
                                         height: '100%',
                                         display: 'flex',
                                         color: "#FFFFFF",
-                                        fontSize: "14px",
+                                        fontSize: { md: "16px", xs: "14px" },
                                         textTransform: "none",
-                                        textShadow: "0px 0px 5px #7DF9FF",
                                         flexDirection: 'row',
                                         justifyContent: 'center',
                                         alignItems: 'center',
@@ -1844,19 +2163,20 @@ const Home = () => {
                         alignItems: 'center',
                         zIndex: '100',
                         '.MuiButton-root': {
-                            fontFamily: "RobotoMonoFont"
+                            fontFamily: "RobotoSlabFont"
                         },
                         '.MuiTypography-root': {
-                            fontFamily: "RobotoMonoFont"
+                            fontFamily: "RobotoSlabFont"
                         },
                     }}
                 >
                     <Box
                         sx={{
-                            backgroundColor: 'black',
-                            borderRadius: '30px',
-                            boxShadow: "2px 0px 1px rgba(150, 150, 150, 0.5)",
+                            backgroundColor: '#1E1E1E',
+                            borderRadius: '8px',
+                            boxShadow: '0px 2px 4px rgba(0,0,0,0.08)',
                             padding: '20px',
+                            border: '2px solid #7DF9FF',
                             width: { md: '35%', xs: '90%' },
                             display: 'flex',
                             flexDirection: 'column',
@@ -1873,7 +2193,7 @@ const Home = () => {
                         >
                             <Typography
                                 sx={{
-                                    fontSize: "28px",
+                                    fontSize: "24px",
                                     fontWeight: '500',
                                     color: "#FFFFFF",
                                 }}
@@ -1893,7 +2213,7 @@ const Home = () => {
                             sx={{
                                 display: 'flex',
                                 flexDirection: 'column',
-                                height: '80vh',
+                                maxHeight: '80vh',
                                 overflowY: 'auto',
                             }}
                         >
@@ -1923,7 +2243,7 @@ const Home = () => {
                                         >
                                             <Typography
                                                 sx={{
-                                                    fontSize: "20px",
+                                                    fontSize: "18px",
                                                     fontWeight: '500',
                                                     color: "#FFFFFF",
                                                 }}
@@ -1932,7 +2252,7 @@ const Home = () => {
                                             </Typography>
                                             <Typography
                                                 sx={{
-                                                    fontSize: "16px",
+                                                    fontSize: "12px",
                                                     fontWeight: '500',
                                                     color: "#888888",
                                                 }}
@@ -1963,10 +2283,10 @@ const Home = () => {
                         alignItems: 'center',
                         zIndex: '100',
                         '.MuiButton-root': {
-                            fontFamily: "RobotoMonoFont"
+                            fontFamily: "RobotoSlabFont"
                         },
                         '.MuiTypography-root': {
-                            fontFamily: "RobotoMonoFont"
+                            fontFamily: "RobotoSlabFont"
                         },
                     }
                     }
@@ -1974,11 +2294,11 @@ const Home = () => {
                     <Box
                         sx={{
                             position: 'relative',
-                            backgroundColor: '#333333',
-                            backdropFilter: 'blur(10px)',
-                            borderRadius: '30px',
-                            border: 'solid 2px #888888',
+                            backgroundColor: '#1E1E1E',
+                            borderRadius: '8px',
+                            border: 'solid 2px #7DF9FF',
                             padding: '30px',
+                            boxShadow: '0px 2px 4px rgba(0,0,0,0.08)',
                             width: { md: '35%', xs: '90%' },
                             display: 'flex',
                             flexDirection: 'column',
@@ -1999,7 +2319,7 @@ const Home = () => {
                         <Typography
                             sx={{
                                 textAlign: "center",
-                                fontSize: { md: "28px", xs: "24px" },
+                                fontSize: { md: "24px", xs: "20px" },
                                 fontWeight: '500',
                                 color: "#FFFFFF",
                             }}
@@ -2018,6 +2338,238 @@ const Home = () => {
                     </Box>
                 </Box > :
                 <></>}
+            {showContractInfo ?
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backdropFilter: "blur(5px)",
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: '100',
+                        '.MuiButton-root': {
+                            fontFamily: "RobotoSlabFont"
+                        },
+                        '.MuiTypography-root': {
+                            fontFamily: "RobotoSlabFont"
+                        },
+                    }
+                    }
+                >
+                    <Box
+                        sx={{
+                            position: 'relative',
+                            backgroundColor: '#1E1E1E',
+                            borderRadius: '8px',
+                            border: 'solid 2px #7DF9FF',
+                            padding: '30px',
+                            boxShadow: '0px 2px 4px rgba(0,0,0,0.08)',
+                            width: { md: '30%', xs: '90%' },
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: '20px'
+                        }}
+                    >
+                        <Close
+                            onClick={(e) => setShowContractInfo("")}
+                            sx={{
+                                position: 'absolute',
+                                top: '10px',
+                                right: '10px',
+                                color: '#8f8f8f',
+                                ':hover': { color: 'white' },
+                                cursor: 'pointer'
+                            }}
+                        />
+                        <Typography
+                            sx={{
+                                textAlign: "center",
+                                fontSize: { md: "24px", xs: "20px" },
+                                fontWeight: '500',
+                                color: "#FFFFFF",
+                            }}
+                        >
+                            {showContractInfo} Contract
+                        </Typography>
+                        <Typography
+                            sx={{
+                                textAlign: "center",
+                                fontSize: { md: "16px", xs: "12px" },
+                                color: "#FFFFFF",
+                            }}
+                        >
+                            {showContractInfo == "Ethereum" ? petitionAddress : (showContractInfo == "Base" ? petitionAddressBase : "")}
+                        </Typography>
+                    </Box>
+                </Box > :
+                <></>}
+            {showEthSigning ?
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backdropFilter: "blur(5px)",
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: '100',
+                        '.MuiButton-root': {
+                            fontFamily: "RobotoSlabFont"
+                        },
+                        '.MuiTypography-root': {
+                            fontFamily: "RobotoSlabFont"
+                        },
+                    }}
+                >
+                    <Box
+                        sx={{
+                            position: 'relative',
+                            backgroundColor: '#1E1E1E',
+                            borderRadius: '8px',
+                            border: 'solid 2px #7DF9FF',
+                            padding: '30px',
+                            boxShadow: '0px 2px 4px rgba(0,0,0,0.08)',
+                            width: { md: '35%', xs: '90%' },
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center',
+                            gap: '20px'
+                        }}
+                    >
+                        <Typography
+                            sx={{
+                                textAlign: "justify",
+                                fontSize: { md: "24px", xs: "20px" },
+                                fontWeight: '500',
+                                color: "#FFFFFF",
+                                textAlign: 'center'
+                            }}
+                        >
+                            You are signing as ETH holder. Continue?
+                        </Typography>
+                        <Box
+                            sx={{
+                                width: '100%',
+                                display: 'flex',
+                                flexDirection: 'row',
+                                justifyContent: 'space-between'
+
+                            }}
+                        >
+                            <Box
+                                sx={{
+                                    width: '50%',
+                                    display: 'flex',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <Button
+                                    sx={{
+                                        width: "80%",
+                                        background: "#ff0000",
+                                        border: "2px solid #7DF9FF",
+                                        borderRadius: "8px",
+                                        ":hover": { background: "#ff000070" },
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        paddingY: '10px',
+                                        color: "#FFFFFF",
+                                        fontSize: { md: "16px", xs: "14px" },
+                                        textTransform: "none",
+                                    }}
+                                    onClick={() => { setShowEthSigning(false); setIsLoading(true); signMessage(); }}
+                                >
+                                    YES
+                                </Button>
+                            </Box>
+                            <Box
+                                sx={{
+                                    width: '50%',
+                                    display: 'flex',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                <Button
+                                    sx={{
+                                        width: "80%",
+                                        background: "#888888",
+                                        border: "2px solid #7DF9FF",
+                                        borderRadius: "8px",
+                                        ":hover": { background: "#88888870" },
+                                        display: 'flex',
+                                        flexDirection: 'row',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        paddingY: '10px',
+                                        color: "#333333",
+                                        fontSize: { md: "16px", xs: "14px" },
+                                        textTransform: "none",
+                                    }}
+                                    onClick={() => { setShowEthSigning(false); }}
+                                >
+                                    NO
+                                </Button>
+                            </Box>
+                        </Box>
+                    </Box>
+                </Box> :
+                <></>
+            }
+            {isExploding &&
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: '50%',
+                        left: '50%',
+                    }}
+                >
+                    <ConfettiExplosion
+
+                        colors={["#00ffff", "#008080", "#00ced1"]}
+                    />
+                </Box>
+            }
+            {isLoading &&
+                <Box
+                    sx={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        backdropFilter: "blur(5px)",
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        zIndex: '100',
+                        '.MuiButton-root': {
+                            fontFamily: "RobotoSlabFont"
+                        },
+                        '.MuiTypography-root': {
+                            fontFamily: "RobotoSlabFont"
+                        },
+                        img: {
+                            width: "100%",
+                            height: "100%",
+                            objectFit: 'contain',
+                        }
+                    }}
+                >
+                    <RotatingElement><img  src="petitions3.png" alt="loading logo" /></RotatingElement>
+                </Box>
+            }
         </>
     );
 };

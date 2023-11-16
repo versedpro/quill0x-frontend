@@ -66,7 +66,7 @@ const TwitterLogin = () => {
                     }}
                 >
                     <span style={{ textShadow: "0px 0px 5px #7DF9FF" }} >
-                        Petitions3
+                        Quill0x
                     </span>
                 </Typography>
                 <Typography

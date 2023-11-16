@@ -13,7 +13,7 @@ const Footer = () => {
   return (
     <Box
       sx={{
-        position: 'fixed',
+        // position: 'fixed',
         bottom: 0,
         left: 0,
         width: "100%",
@@ -35,7 +35,7 @@ const Footer = () => {
           maxWidth: "1600px!important",
           background: "#33333310",
           backdropFilter: 'blur(10px)',
-          padding: "30px 15px",
+          padding: "30px 100px",
           gap: '20px'
         }}
       >

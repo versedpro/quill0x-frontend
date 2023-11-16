@@ -102,7 +102,7 @@ const Landing = () => {
                             </Typography>
                         </Box>
                     </Box>
-                    <Box
+                    {/* <Box
                         sx={{
                             marginTop: '100px',
                             display: 'flex',
@@ -176,7 +176,6 @@ const Landing = () => {
                                             marginTop: '50px',
                                             height: '60px',
                                             width: '300px',
-                                            // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                             backgroundColor: '#ffffff50',
                                             backdropFilter: 'blur(10px)',
                                             color: "#fff",
@@ -235,19 +234,17 @@ const Landing = () => {
                                         alignItems: 'center',
                                         borderRadius: '20px',
                                         border: 'solid 1px #333333',
-                                        // backgroundImage: 'url(./UncleSam.png)',
                                         backgroundPosition: 'top center',
                                         backgroundSize: 'contain',
                                         backgroundRepeat: 'no-repeat'
                                     }}
                                 >
                                     <Button
-                                        onClick={(e) => {  /*navigate("/home")*/ }}
+                                        onClick={(e) => { }}
                                         sx={{
                                             marginTop: '50px',
                                             height: '60px',
                                             width: '300px',
-                                            // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                             backgroundColor: '#ffffff50',
                                             backdropFilter: 'blur(10px)',
                                             color: "#fff",
@@ -275,27 +272,6 @@ const Landing = () => {
                                         }}
                                     >
                                         <Box sx={{ height: "30px" }}></Box>
-                                        {/* <img alt="" src={"./logo1921.png"} />
-                                        <Typography
-                                            sx={{
-                                                color: 'white',
-                                                fontSize: '15px',
-                                                fontWeight: '700',
-                                                textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                            }}
-                                        >
-                                            Price: $1
-                                        </Typography>
-                                        <Typography
-                                            sx={{
-                                                color: 'white',
-                                                fontSize: '15px',
-                                                fontWeight: '700',
-                                                textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                            }}
-                                        >
-                                            Total Supply: 20T
-                                        </Typography> */}
                                     </Box>
                                 </Box>
                                 <Box
@@ -307,19 +283,17 @@ const Landing = () => {
                                         alignItems: 'center',
                                         borderRadius: '20px',
                                         border: 'solid 1px #333333',
-                                        // backgroundImage: 'url(./UncleSam.png)',
                                         backgroundPosition: 'top center',
                                         backgroundSize: 'contain',
                                         backgroundRepeat: 'no-repeat'
                                     }}
                                 >
                                     <Button
-                                        onClick={(e) => {  /*navigate("/home")*/ }}
+                                        onClick={(e) => { }}
                                         sx={{
                                             marginTop: '50px',
                                             height: '60px',
                                             width: '300px',
-                                            // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                             backgroundColor: '#ffffff50',
                                             backdropFilter: 'blur(10px)',
                                             color: "#fff",
@@ -347,27 +321,6 @@ const Landing = () => {
                                         }}
                                     >
                                         <Box sx={{ height: "30px" }}></Box>
-                                        {/* <img alt="" src={"./logo1921.png"} />
-                                        <Typography
-                                            sx={{
-                                                color: 'white',
-                                                fontSize: '15px',
-                                                fontWeight: '700',
-                                                textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                            }}
-                                        >
-                                            Price: $1
-                                        </Typography>
-                                        <Typography
-                                            sx={{
-                                                color: 'white',
-                                                fontSize: '15px',
-                                                fontWeight: '700',
-                                                textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                            }}
-                                        >
-                                            Total Supply: 20T
-                                        </Typography> */}
                                     </Box>
                                 </Box>
                             </Box>
@@ -388,19 +341,17 @@ const Landing = () => {
                                         alignItems: 'center',
                                         borderRadius: '20px',
                                         border: 'solid 1px #333333',
-                                        // backgroundImage: 'url(./UncleSam.png)',
                                         backgroundPosition: 'top center',
                                         backgroundSize: 'contain',
                                         backgroundRepeat: 'no-repeat'
                                     }}
                                 >
                                     <Button
-                                        onClick={(e) => {  /*navigate("/home")*/ }}
+                                        onClick={(e) => { }}
                                         sx={{
                                             marginTop: '50px',
                                             height: '60px',
                                             width: '300px',
-                                            // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                             backgroundColor: '#ffffff50',
                                             backdropFilter: 'blur(10px)',
                                             color: "#fff",
@@ -428,27 +379,6 @@ const Landing = () => {
                                         }}
                                     >
                                         <Box sx={{ height: "30px" }}></Box>
-                                        {/* <img alt="" src={"./logo1921.png"} />
-                                        <Typography
-                                            sx={{
-                                                color: 'white',
-                                                fontSize: '15px',
-                                                fontWeight: '700',
-                                                textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                            }}
-                                        >
-                                            Price: $2
-                                        </Typography>
-                                        <Typography
-                                            sx={{
-                                                color: 'white',
-                                                fontSize: '15px',
-                                                fontWeight: '700',
-                                                textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                            }}
-                                        >
-                                            Total Supply: 40T
-                                        </Typography> */}
                                     </Box>
                                 </Box>
                                 <Box
@@ -460,19 +390,17 @@ const Landing = () => {
                                         alignItems: 'center',
                                         borderRadius: '20px',
                                         border: 'solid 1px #333333',
-                                        // backgroundImage: 'url(./UncleSam.png)',
                                         backgroundPosition: 'top center',
                                         backgroundSize: 'contain',
                                         backgroundRepeat: 'no-repeat'
                                     }}
                                 >
                                     <Button
-                                        onClick={(e) => {  /*navigate("/home")*/ }}
+                                        onClick={(e) => { }}
                                         sx={{
                                             marginTop: '50px',
                                             height: '60px',
                                             width: '300px',
-                                            // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                             backgroundColor: '#ffffff50',
                                             backdropFilter: 'blur(10px)',
                                             color: "#fff",
@@ -500,27 +428,6 @@ const Landing = () => {
                                         }}
                                     >
                                         <Box sx={{ height: "30px" }}></Box>
-                                        {/* <img alt="" src={"./logo1921.png"} />
-                                        <Typography
-                                            sx={{
-                                                color: 'white',
-                                                fontSize: '15px',
-                                                fontWeight: '700',
-                                                textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                            }}
-                                        >
-                                            Price: $3
-                                        </Typography>
-                                        <Typography
-                                            sx={{
-                                                color: 'white',
-                                                fontSize: '15px',
-                                                fontWeight: '700',
-                                                textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                            }}
-                                        >
-                                            Total Supply: 50T
-                                        </Typography> */}
                                     </Box>
                                 </Box>
                                 <Box
@@ -532,19 +439,17 @@ const Landing = () => {
                                         alignItems: 'center',
                                         borderRadius: '20px',
                                         border: 'solid 1px #333333',
-                                        // backgroundImage: 'url(./UncleSam.png)',
                                         backgroundPosition: 'top center',
                                         backgroundSize: 'contain',
                                         backgroundRepeat: 'no-repeat'
                                     }}
                                 >
                                     <Button
-                                        onClick={(e) => {  /*navigate("/home")*/ }}
+                                        onClick={(e) => { }}
                                         sx={{
                                             marginTop: '50px',
                                             height: '60px',
                                             width: '300px',
-                                            // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                             backgroundColor: '#ffffff50',
                                             backdropFilter: 'blur(10px)',
                                             color: "#fff",
@@ -572,27 +477,6 @@ const Landing = () => {
                                         }}
                                     >
                                         <Box sx={{ height: "30px" }}></Box>
-                                        {/* <img alt="" src={"./logo1921.png"} />
-                                        <Typography
-                                            sx={{
-                                                color: 'white',
-                                                fontSize: '15px',
-                                                fontWeight: '700',
-                                                textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                            }}
-                                        >
-                                            Price: $5
-                                        </Typography>
-                                        <Typography
-                                            sx={{
-                                                color: 'white',
-                                                fontSize: '15px',
-                                                fontWeight: '700',
-                                                textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                            }}
-                                        >
-                                            Total Supply: 60T
-                                        </Typography> */}
                                     </Box>
                                 </Box>
                             </Box>
@@ -645,7 +529,6 @@ const Landing = () => {
                                         marginTop: '50px',
                                         height: '60px',
                                         width: '300px',
-                                        // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                         backgroundColor: '#ffffff50',
                                         backdropFilter: 'blur(10px)',
                                         color: "#fff",
@@ -704,19 +587,17 @@ const Landing = () => {
                                     alignItems: 'center',
                                     borderRadius: '20px',
                                     border: 'solid 1px #333333',
-                                    // backgroundImage: 'url(./UncleSam.png)',
                                     backgroundPosition: 'top center',
                                     backgroundSize: 'contain',
                                     backgroundRepeat: 'no-repeat'
                                 }}
                             >
                                 <Button
-                                    onClick={(e) => {  /*navigate("/home")*/ }}
+                                    onClick={(e) => { }}
                                     sx={{
                                         marginTop: '50px',
                                         height: '60px',
                                         width: '300px',
-                                        // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                         backgroundColor: '#ffffff50',
                                         backdropFilter: 'blur(10px)',
                                         color: "#fff",
@@ -744,27 +625,6 @@ const Landing = () => {
                                     }}
                                 >
                                     <Box sx={{ height: "30px" }}></Box>
-                                    {/* <img alt="" src={"./logo1921.png"} />
-                                    <Typography
-                                        sx={{
-                                            color: 'white',
-                                            fontSize: '12px',
-                                            fontWeight: '700',
-                                            textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                        }}
-                                    >
-                                        Price: $1
-                                    </Typography>
-                                    <Typography
-                                        sx={{
-                                            color: 'white',
-                                            fontSize: '12px',
-                                            fontWeight: '700',
-                                            textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                        }}
-                                    >
-                                        Total Supply: 20T
-                                    </Typography> */}
                                 </Box>
                             </Box>
                             <Box
@@ -776,19 +636,17 @@ const Landing = () => {
                                     alignItems: 'center',
                                     borderRadius: '20px',
                                     border: 'solid 1px #333333',
-                                    // backgroundImage: 'url(./UncleSam.png)',
                                     backgroundPosition: 'top center',
                                     backgroundSize: 'contain',
                                     backgroundRepeat: 'no-repeat'
                                 }}
                             >
                                 <Button
-                                    onClick={(e) => {  /*navigate("/home")*/ }}
+                                    onClick={(e) => { }}
                                     sx={{
                                         marginTop: '50px',
                                         height: '60px',
                                         width: '300px',
-                                        // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                         backgroundColor: '#ffffff50',
                                         backdropFilter: 'blur(10px)',
                                         color: "#fff",
@@ -816,27 +674,6 @@ const Landing = () => {
                                     }}
                                 >
                                     <Box sx={{ height: "30px" }}></Box>
-                                    {/* <img alt="" src={"./logo1921.png"} />
-                                    <Typography
-                                        sx={{
-                                            color: 'white',
-                                            fontSize: '12px',
-                                            fontWeight: '700',
-                                            textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                        }}
-                                    >
-                                        Price: $1
-                                    </Typography>
-                                    <Typography
-                                        sx={{
-                                            color: 'white',
-                                            fontSize: '12px',
-                                            fontWeight: '700',
-                                            textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                        }}
-                                    >
-                                        Total Supply: 20T
-                                    </Typography> */}
                                 </Box>
                             </Box>
                             <Box
@@ -848,19 +685,17 @@ const Landing = () => {
                                     alignItems: 'center',
                                     borderRadius: '20px',
                                     border: 'solid 1px #333333',
-                                    // backgroundImage: 'url(./UncleSam.png)',
                                     backgroundPosition: 'top center',
                                     backgroundSize: 'contain',
                                     backgroundRepeat: 'no-repeat'
                                 }}
                             >
                                 <Button
-                                    onClick={(e) => {  /*navigate("/home")*/ }}
+                                    onClick={(e) => { }}
                                     sx={{
                                         marginTop: '50px',
                                         height: '60px',
                                         width: '300px',
-                                        // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                         backgroundColor: '#ffffff50',
                                         backdropFilter: 'blur(10px)',
                                         color: "#fff",
@@ -888,27 +723,6 @@ const Landing = () => {
                                     }}
                                 >
                                     <Box sx={{ height: "30px" }}></Box>
-                                    {/* <img alt="" src={"./logo1921.png"} />
-                                    <Typography
-                                        sx={{
-                                            color: 'white',
-                                            fontSize: '12px',
-                                            fontWeight: '700',
-                                            textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                        }}
-                                    >
-                                        Price: $2
-                                    </Typography>
-                                    <Typography
-                                        sx={{
-                                            color: 'white',
-                                            fontSize: '12px',
-                                            fontWeight: '700',
-                                            textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                        }}
-                                    >
-                                        Total Supply: 40T
-                                    </Typography> */}
                                 </Box>
                             </Box>
                             <Box
@@ -920,19 +734,17 @@ const Landing = () => {
                                     alignItems: 'center',
                                     borderRadius: '20px',
                                     border: 'solid 1px #333333',
-                                    // backgroundImage: 'url(./UncleSam.png)',
                                     backgroundPosition: 'top center',
                                     backgroundSize: 'contain',
                                     backgroundRepeat: 'no-repeat'
                                 }}
                             >
                                 <Button
-                                    onClick={(e) => {  /*navigate("/home")*/ }}
+                                    onClick={(e) => { }}
                                     sx={{
                                         marginTop: '50px',
                                         height: '60px',
                                         width: '300px',
-                                        // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                         backgroundColor: '#ffffff50',
                                         backdropFilter: 'blur(10px)',
                                         color: "#fff",
@@ -960,27 +772,6 @@ const Landing = () => {
                                     }}
                                 >
                                     <Box sx={{ height: "30px" }}></Box>
-                                    {/* <img alt="" src={"./logo1921.png"} />
-                                    <Typography
-                                        sx={{
-                                            color: 'white',
-                                            fontSize: '12px',
-                                            fontWeight: '700',
-                                            textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                        }}
-                                    >
-                                        Price: $3
-                                    </Typography>
-                                    <Typography
-                                        sx={{
-                                            color: 'white',
-                                            fontSize: '12px',
-                                            fontWeight: '700',
-                                            textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                        }}
-                                    >
-                                        Total Supply: 50T
-                                    </Typography> */}
                                 </Box>
                             </Box>
                             <Box
@@ -992,19 +783,17 @@ const Landing = () => {
                                     alignItems: 'center',
                                     borderRadius: '20px',
                                     border: 'solid 1px #333333',
-                                    // backgroundImage: 'url(./UncleSam.png)',
                                     backgroundPosition: 'top center',
                                     backgroundSize: 'contain',
                                     backgroundRepeat: 'no-repeat'
                                 }}
                             >
                                 <Button
-                                    onClick={(e) => {  /*navigate("/home")*/ }}
+                                    onClick={(e) => {   }}
                                     sx={{
                                         marginTop: '50px',
                                         height: '60px',
                                         width: '300px',
-                                        // background: 'linear-gradient(to bottom, #11203E, #314E85)',
                                         backgroundColor: '#ffffff50',
                                         backdropFilter: 'blur(10px)',
                                         color: "#fff",
@@ -1032,32 +821,39 @@ const Landing = () => {
                                     }}
                                 >
                                     <Box sx={{ height: "30px" }}></Box>
-                                    {/* <img alt="" src={"./logo1921.png"} />
-                                    <Typography
-                                        sx={{
-                                            color: 'white',
-                                            fontSize: '12px',
-                                            fontWeight: '700',
-                                            textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                        }}
-                                    >
-                                        Price: $5
-                                    </Typography>
-                                    <Typography
-                                        sx={{
-                                            color: 'white',
-                                            fontSize: '12px',
-                                            fontWeight: '700',
-                                            textshadow: "1px -1px 2px rgba(150, 150, 150, 0.5)"
-                                        }}
-                                    >
-                                        Total Supply: 60T
-                                    </Typography> */}
                                 </Box>
                             </Box>
                         </Carousel>
-                    </Box>
+                    </Box> */}
                     <Box
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'row',
+                            justifyContent: 'center'
+                        }}
+                    >
+                        <Button
+                            onClick={(e) => { navigate("/home") }}
+                            sx={{
+                                height: '80px',
+                                width: { md: '400px', xs: '100%' },
+                                // background: 'linear-gradient(to bottom, #11203E, #314E85)',
+                                backgroundColor: '#ffffff',
+                                color: "#000",
+                                fontSize: "27px",
+                                fontWeight: '500',
+                                textTransform: "none",
+                                borderRadius: "20px",
+                                padding: "5px 30px",
+                                boxShadow: 3,
+                                ":hover": { background: "#5CD7DD" },
+                                ":disabled": { color: "#ffffff70", background: "#ffffff70" }
+                            }}
+                        >
+                            SIGN INAUGURAL PETITION
+                        </Button>
+                    </Box>
+                    {/* <Box
                         sx={{
                             display: 'flex',
                             flexDirection: 'row',
@@ -1084,7 +880,7 @@ const Landing = () => {
                         >
                             Leaderboard
                         </Button>
-                    </Box>
+                    </Box> */}
                     <Box
                         sx={{
                             height: '600px',
@@ -1102,7 +898,7 @@ const Landing = () => {
                                 textAlign: 'center'
                             }}
                         >
-                            How Petition3 Works
+                            How Quill0x Works
                         </Typography>
                     </Box>
                     <Box
